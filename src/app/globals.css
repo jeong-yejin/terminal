@@ -1,0 +1,124 @@
+/* ─── Font Import ─────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── ReboundX Design Tokens (Dark Mode) ────────────────────────────────────
+ *
+ * 소스: Color-semantic.json / Space.json / Radius.json / Text.json
+ *
+ * CSS 변수 포맷: Tailwind opacity modifier 지원을 위해
+ *   rgb(var(--color-xxx) / <alpha-value>) 패턴에 맞춰
+ *   "R G B" (공백 구분) 형태로 정의합니다.
+ *
+ * ────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ── Background ─────────────────────────────────────────────────────────── */
+  /* background.normal-normal      */ --color-bg-base:    10 10 10;      /* #0A0A0A */
+  /* background.normal-alternative */ --color-surface-1:  23 23 23;      /* #171717 */
+  /* background.elevated-normal    */ --color-surface-2:  38 38 38;      /* #262626 */
+  /* background.elevated-alt       */ --color-surface-3:  64 64 64;      /* #404040 */
+
+  /* ── Label (Typography Color) ──────────────────────────────────────────── */
+  /* label.strong      */ --color-label-strong:      255 255 255;   /* #FFFFFF */
+  /* label.normal      */ --color-label-normal:      245 245 245;   /* #F5F5F5 */
+  /* label.neutral     */ --color-label-neutral:     212 212 212;   /* #D4D4D4 */
+  /* label.assistive   */ --color-label-assistive:   163 163 163;   /* #A3A3A3 */
+  /* label.alternative */ --color-label-alternative: 115 115 115;   /* #737373 */
+  /* label.disable     */ --color-label-disable:     82 82 82;      /* #525252 */
+  /* label.inverse     */ --color-label-inverse:     10 10 10;      /* #0A0A0A */
+
+  /* ── Line / Border ─────────────────────────────────────────────────────── */
+  /* line.normal-normal      (rgba #FFF 20%) */ --color-line-normal-normal:      rgba(255, 255, 255, 0.20);
+  /* line.normal-neutral     (rgba #FFF  9%) */ --color-line-normal-neutral:     rgba(255, 255, 255, 0.09);
+  /* line.normal-alternative (rgba #FFF  6%) */ --color-line-normal-alternative: rgba(255, 255, 255, 0.06);
+
+  /* ── Primary Brand (#CAFF5D) ────────────────────────────────────────────── */
+  /* primary.normal */ --color-primary-normal: 202 255 93;    /* #CAFF5D */
+  /* primary.strong */ --color-primary-strong: 179 232 78;    /* #B3E84E */
+  /* primary.heavy  */ --color-primary-heavy:  150 201 65;    /* #96C941 */
+
+  /* ── Status ─────────────────────────────────────────────────────────────── */
+  /* status.positive  */ --color-status-positive:  34 197 94;    /* #22C55E */
+  /* status.negative  */ --color-status-negative:  239 68 68;    /* #EF4444 */
+  /* status.cautionary*/ --color-status-cautionary:251 191 36;   /* #FBBF24 */
+  /* status.info      */ --color-status-info:       96 165 250;   /* #60A5FA */
+
+  /* ── Accent ──────────────────────────────────────────────────────────────── */
+  /* accent.background-primary (rgba #CAFF5D 10%) */
+  --color-accent-bg-primary: rgba(202, 255, 93, 0.10);
+
+  /* ── Interaction ─────────────────────────────────────────────────────────── */
+  /* interaction.inactive */ --color-interaction-inactive: 115 115 115; /* #737373 */
+  /* interaction.disable  */ --color-interaction-disable:  82 82 82;    /* #525252 */
+}
+
+/* ─── Base Styles ──────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    font-family: "Manrope", sans-serif;
+    /* 기본 배경/텍스트: dark mode 고정 */
+    background-color: rgb(var(--color-bg-base));
+    color: rgb(var(--color-label-strong));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply min-h-screen;
+  }
+
+  /* 스크롤바 스타일 (Webkit) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgb(var(--color-surface-1));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+/* ─── Component Utilities ──────────────────────────────────────────────────── */
+@layer utilities {
+  /* 카드 기본 스타일 */
+  .card {
+    @apply rounded-xl border border-border-subtle bg-surface-1 p-5;
+  }
+
+  /* 포커스 링 공통 */
+  .focus-ring {
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+
+  /* 텍스트 타입 유틸 */
+  .text-display-h5 {
+    font-size: 24px;
+    line-height: 120%;
+    letter-spacing: -0.02em;
+  }
+  .text-body-3 {
+    font-size: 16px;
+    line-height: 150%;
+  }
+  .text-label-1 {
+    font-size: 14px;
+    line-height: 140%;
+  }
+  .text-label-2 {
+    font-size: 13px;
+    line-height: 140%;
+  }
+  .text-caption {
+    font-size: 12px;
+    line-height: 140%;
+  }
+}
