@@ -5,12 +5,16 @@ import type {
   TradeHistoryItem,
   PositionHistoryItem,
   DepositHistoryItem,
+  TransferHistoryItem,
+  WithdrawHistoryItem,
 } from "@/types/mypage";
 import {
   fetchOrderHistory,
   fetchTradeHistory,
   fetchPositionHistory,
   fetchDepositHistory,
+  fetchTransferHistory,
+  fetchWithdrawHistory,
 } from "@/lib/api/history";
 
 // 히스토리는 실시간 불필요 — 포커스 리패치 비활성화, 30s 중복 제거
@@ -50,6 +54,24 @@ export function useDepositHistory(filters: HistoryFilters) {
   const { data, isLoading, error } = useSWR<DepositHistoryItem[]>(
     ["/api/history/deposits", filters],
     () => fetchDepositHistory(filters),
+    HISTORY_SWR_CONFIG
+  );
+  return { data, isLoading, error };
+}
+
+export function useTransferHistory(filters: HistoryFilters) {
+  const { data, isLoading, error } = useSWR<TransferHistoryItem[]>(
+    ["/api/history/transfers", filters],
+    () => fetchTransferHistory(filters),
+    HISTORY_SWR_CONFIG
+  );
+  return { data, isLoading, error };
+}
+
+export function useWithdrawHistory(filters: HistoryFilters) {
+  const { data, isLoading, error } = useSWR<WithdrawHistoryItem[]>(
+    ["/api/history/withdrawals", filters],
+    () => fetchWithdrawHistory(filters),
     HISTORY_SWR_CONFIG
   );
   return { data, isLoading, error };

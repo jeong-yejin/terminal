@@ -16,7 +16,7 @@ export function DepositHistoryTable({ filters }: DepositHistoryTableProps) {
   }
 
   if (!data?.length) {
-    return <div className="py-16 text-center text-sm text-text-secondary">입금 내역이 없습니다.</div>;
+    return <div className="py-16 text-center text-sm text-text-secondary">No deposit history.</div>;
   }
 
   return (

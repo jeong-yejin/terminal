@@ -36,6 +36,22 @@ export async function GET() {
         totalUsd: 31_539.34,
       },
     ],
+    balanceHistory: [
+      { date: "2025-04-01", totalUsd: 261_000 },
+      { date: "2025-04-02", totalUsd: 265_800 },
+      { date: "2025-04-03", totalUsd: 259_200 },
+      { date: "2025-04-04", totalUsd: 271_500 },
+      { date: "2025-04-05", totalUsd: 269_000 },
+      { date: "2025-04-06", totalUsd: 274_800 },
+      { date: "2025-04-07", totalUsd: 278_200 },
+      { date: "2025-04-08", totalUsd: 272_600 },
+      { date: "2025-04-09", totalUsd: 265_400 },
+      { date: "2025-04-10", totalUsd: 268_900 },
+      { date: "2025-04-11", totalUsd: 275_100 },
+      { date: "2025-04-12", totalUsd: 279_500 },
+      { date: "2025-04-13", totalUsd: 281_200 },
+      { date: "2025-04-14", totalUsd: 284_510 },
+    ],
   };
   return NextResponse.json(data);
 }

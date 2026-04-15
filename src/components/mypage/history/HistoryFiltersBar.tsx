@@ -8,17 +8,17 @@ interface HistoryFiltersBarProps {
 }
 
 /**
- * 공통 필터 바 (History 전 탭 공유)
+ * Shared filter bar — used across all History tabs
  *
- * 필터:
- *   - 거래소 선택 (All + 연동된 거래소 목록)
- *   - 기간: 시작일 ~ 종료일 date picker
- *   - 초기화 버튼
+ * Filters:
+ *   - Exchange (All + connected exchanges)
+ *   - Date range: start ~ end (max 90 days)
+ *   - Reset button
  *
- * 스펙:
- *   - 가로 flex, gap-3
- *   - 각 인풋 높이 36px
- *   - 날짜 범위 최대: 90일 (초과 시 에러 메시지)
+ * WCAG:
+ *   - Explicit <label> associations via aria-label
+ *   - Consistent focus-ring on all interactive elements
+ *   - Reset communicates intent clearly
  */
 export function HistoryFiltersBar({ value, onChange }: HistoryFiltersBarProps) {
   const handleExchangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -38,48 +38,53 @@ export function HistoryFiltersBar({ value, onChange }: HistoryFiltersBarProps) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      {/* 거래소 필터 */}
+    <div
+      className="flex flex-wrap items-center gap-3"
+      role="group"
+      aria-label="History filters"
+    >
+      {/* Exchange filter */}
       <select
         value={value.exchangeId ?? "all"}
         onChange={handleExchangeChange}
-        aria-label="거래소 선택"
+        aria-label="Filter by exchange"
         className="h-9 rounded-lg border border-border-subtle bg-surface-1 px-3 text-sm text-text-primary
-          focus:outline focus:outline-2 focus:outline-primary"
+          focus-ring cursor-pointer"
       >
         <option value="all">All Exchanges</option>
-        {/* TODO: 연동된 거래소 목록 동적 렌더링 */}
+        {/* TODO: dynamically render connected exchanges */}
       </select>
 
-      {/* 시작일 */}
+      {/* Start date */}
       <input
         type="date"
         value={value.startDate ?? ""}
         onChange={handleStartDate}
-        aria-label="시작일"
+        aria-label="Start date"
         className="h-9 rounded-lg border border-border-subtle bg-surface-1 px-3 text-sm text-text-primary
-          focus:outline focus:outline-2 focus:outline-primary"
+          focus-ring"
       />
 
-      <span className="text-text-tertiary">~</span>
+      <span aria-hidden="true" className="text-text-tertiary">–</span>
 
-      {/* 종료일 */}
+      {/* End date */}
       <input
         type="date"
         value={value.endDate ?? ""}
         onChange={handleEndDate}
-        aria-label="종료일"
+        aria-label="End date"
         className="h-9 rounded-lg border border-border-subtle bg-surface-1 px-3 text-sm text-text-primary
-          focus:outline focus:outline-2 focus:outline-primary"
+          focus-ring"
       />
 
-      {/* 초기화 */}
+      {/* Reset */}
       <button
         onClick={handleReset}
         className="h-9 rounded-lg border border-border-subtle px-3 text-sm text-text-secondary
-          hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+          hover:text-text-primary focus-ring transition-colors"
+        aria-label="Reset all filters"
       >
-        초기화
+        Reset
       </button>
     </div>
   );

@@ -25,10 +25,10 @@ export function PerformancePage() {
     <div className="space-y-6">
       <h1 className="text-xl font-semibold text-text-primary">Performance</h1>
 
-      {/* DEV NOTE: 개발단 협의 필요 */}
+      {/* DEV: confirm P&L data scope and rebate integration method before finalising spec */}
       {process.env.NODE_ENV === "development" && (
         <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-400">
-          ⚠️ <strong>개발 협의 필요:</strong> P&L 데이터 범위 및 리베이트 연동 방식 확인 후 스펙 확정
+          ⚠️ <strong>Dev note:</strong> Confirm P&L data range and rebate integration method (own calculation vs exchange API) before finalising spec.
         </div>
       )}
 

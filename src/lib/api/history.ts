@@ -4,6 +4,8 @@ import type {
   TradeHistoryItem,
   PositionHistoryItem,
   DepositHistoryItem,
+  TransferHistoryItem,
+  WithdrawHistoryItem,
 } from "@/types/mypage";
 
 function buildQuery(filters: HistoryFilters): string {
@@ -36,5 +38,17 @@ export async function fetchPositionHistory(filters: HistoryFilters): Promise<Pos
 export async function fetchDepositHistory(filters: HistoryFilters): Promise<DepositHistoryItem[]> {
   const res = await fetch(`/api/history/deposits${buildQuery(filters)}`);
   if (!res.ok) throw new Error("Failed to fetch deposit history");
+  return res.json();
+}
+
+export async function fetchTransferHistory(filters: HistoryFilters): Promise<TransferHistoryItem[]> {
+  const res = await fetch(`/api/history/transfers${buildQuery(filters)}`);
+  if (!res.ok) throw new Error("Failed to fetch transfer history");
+  return res.json();
+}
+
+export async function fetchWithdrawHistory(filters: HistoryFilters): Promise<WithdrawHistoryItem[]> {
+  const res = await fetch(`/api/history/withdrawals${buildQuery(filters)}`);
+  if (!res.ok) throw new Error("Failed to fetch withdraw history");
   return res.json();
 }

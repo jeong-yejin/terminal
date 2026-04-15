@@ -35,7 +35,7 @@ export function AssetTable({ data, isLoading }: AssetTableProps) {
   if (!data?.length) {
     return (
       <div className="rounded-xl border border-border-subtle bg-surface-1 p-8 text-center">
-        <p className="text-sm text-text-secondary">보유 자산이 없습니다.</p>
+        <p className="text-sm text-text-secondary">No assets held.</p>
       </div>
     );
   }

@@ -23,7 +23,7 @@ export function DepositEntryPoint({ exchangeId }: DepositEntryPointProps) {
   return (
     <button
       disabled={isDisabled}
-      title={isDisabled ? "거래소를 선택하세요" : `${exchangeId} 입금`}
+      title={isDisabled ? "Select an exchange first" : `Deposit to ${exchangeId}`}
       className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white
         hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40
         focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -33,7 +33,7 @@ export function DepositEntryPoint({ exchangeId }: DepositEntryPointProps) {
       }}
     >
       <ArrowDownToLine size={16} aria-hidden="true" />
-      입금
+      Deposit
     </button>
   );
 }

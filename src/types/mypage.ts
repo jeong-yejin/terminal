@@ -31,9 +31,16 @@ export interface ConnectedExchange {
   totalUsd: number;
 }
 
+export interface BalanceDataPoint {
+  date: string;  // ISO date "YYYY-MM-DD"
+  totalUsd: number;
+}
+
 export interface OverviewData {
   summary: AssetSummary;
   connectedExchanges: ConnectedExchange[];
+  /** 최근 14일 잔고 히스토리 (sparkline용) */
+  balanceHistory?: BalanceDataPoint[];
 }
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
@@ -94,14 +101,42 @@ export interface PositionHistoryItem {
   closedAt: string;
 }
 
-export type DepositStatus = "pending" | "completed" | "failed";
+export type TransactionStatus = "pending" | "completed" | "failed";
+export type DepositStatus = TransactionStatus;
 
 export interface DepositHistoryItem {
   id: string;
   exchangeId: ExchangeId;
   asset: string;
   amount: number;
-  status: DepositStatus;
+  status: TransactionStatus;
+  txHash?: string;
+  createdAt: string;
+}
+
+/** Funding ↔ Trading 계좌 간 내부 이체 내역 */
+export interface TransferHistoryItem {
+  id: string;
+  exchangeId: ExchangeId;
+  asset: string;
+  amount: number;
+  fromAccount: "funding" | "trading";
+  toAccount: "funding" | "trading";
+  status: TransactionStatus;
+  createdAt: string;
+}
+
+/**
+ * 출금 내역 — 터미널에서 출금 기능은 제공하지 않으며, 거래소에서 실행된 내역만 열람 가능
+ */
+export interface WithdrawHistoryItem {
+  id: string;
+  exchangeId: ExchangeId;
+  asset: string;
+  amount: number;
+  toAddress: string;
+  network?: string;
+  status: TransactionStatus;
   txHash?: string;
   createdAt: string;
 }
@@ -143,4 +178,6 @@ export interface ExchangeConnection {
   status: ExchangeStatus;
   connectedAt: string;
   apiKeyMasked: string;
+  /** 거래소 계정 UID */
+  uid?: string;
 }

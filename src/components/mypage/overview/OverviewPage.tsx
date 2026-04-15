@@ -1,129 +1,328 @@
 "use client";
 
 import { memo, useMemo, useCallback } from "react";
-import {
-  CircleDollarSign,
-  BarChart2,
-  Zap,
-  Crosshair,
-  Building2,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { useOverview } from "@/hooks/useOverview";
+import type { BalanceDataPoint } from "@/types/mypage";
 
-// Intl.NumberFormat 인스턴스 모듈 스코프 캐시 — 매 호출마다 생성 방지
-const USDT_FORMATTER = new Intl.NumberFormat("en-US", {
+// ─── Sparkline ────────────────────────────────────────────────────────────────
+
+const SPARK_W = 400;
+const SPARK_H = 48;
+
+function buildLinePath(values: number[]): string {
+  if (values.length < 2) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const xStep = SPARK_W / (values.length - 1);
+  return values
+    .map((v, i) => {
+      const x = (i * xStep).toFixed(1);
+      const y = (SPARK_H - ((v - min) / range) * (SPARK_H - 6) - 3).toFixed(1);
+      return `${i === 0 ? "M" : "L"}${x},${y}`;
+    })
+    .join(" ");
+}
+
+function buildAreaPath(values: number[]): string {
+  const line = buildLinePath(values);
+  if (!line) return "";
+  const lastX = ((values.length - 1) * (SPARK_W / (values.length - 1))).toFixed(1);
+  return `${line} L${lastX},${SPARK_H} L0,${SPARK_H} Z`;
+}
+
+function Sparkline({ data }: { data?: BalanceDataPoint[] }) {
+  const values = useMemo(() => data?.map((d) => d.totalUsd) ?? [], [data]);
+  if (values.length < 2) return null;
+
+  return (
+    <svg
+      viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
+      role="img"
+      aria-label="14-day balance trend chart"
+      className="w-full"
+      style={{ height: SPARK_H }}
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="rgb(202 255 93)" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="rgb(202 255 93)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={buildAreaPath(values)} fill="url(#spark-fill)" />
+      <path
+        d={buildLinePath(values)}
+        fill="none"
+        stroke="rgb(202 255 93)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// ─── Formatters ───────────────────────────────────────────────────────────────
+
+const NUM_FMT = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
-function formatUsdt(value?: number): string {
-  if (value == null) return "—";
-  return USDT_FORMATTER.format(value);
+function fmtUsd(v?: number): string {
+  if (v == null) return "—";
+  return NUM_FMT.format(v);
 }
 
-function formatPct(value?: number): string {
-  if (value == null) return "—";
-  return value.toFixed(2);
+function fmtPct(v?: number): string {
+  if (v == null) return "—";
+  const sign = v >= 0 ? "+" : "";
+  return `${sign}${v.toFixed(2)}%`;
 }
 
-// 정적 JSX — 매 렌더마다 새 객체 생성 방지 (memo된 MetricCard의 props 안정화)
-const TRANSFER_ACTION = (
-  <Link
-    href="#"
-    className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80"
-  >
-    Transfer <span aria-hidden>→</span>
-  </Link>
-);
+// ─── MetricCard ───────────────────────────────────────────────────────────────
 
 interface MetricCardProps {
-  icon: LucideIcon;
   label: string;
   value: string;
   unit?: string;
-  action?: React.ReactNode;
+  valueColor?: "default" | "positive" | "negative";
+  action: { label: string; href: string };
   isLoading?: boolean;
-  noBorder?: boolean;
 }
 
-// memo: 부모 리렌더 시 props 변경 없으면 스킵
 const MetricCard = memo(function MetricCard({
-  icon: Icon,
-  label,
-  value,
-  unit,
-  action,
-  isLoading,
-  noBorder,
+  label, value, unit, valueColor = "default", action, isLoading,
 }: MetricCardProps) {
   if (isLoading) {
     return (
-      <div className={`rounded-xl bg-surface-1 p-5${noBorder ? "" : " border border-border-subtle"}`}>
-        {/* 아이콘+라벨 행 스켈레톤 */}
-        <div className="mb-4 flex items-center gap-2">
-          <div className="h-7 w-7 animate-pulse rounded-full bg-surface-3" />
-          <div className="h-3.5 w-24 animate-pulse rounded bg-surface-3" />
+      <div className="rounded-xl border border-border-subtle bg-surface-1 p-5">
+        <div className="h-3 w-28 animate-pulse rounded bg-surface-3" />
+        <div className="mt-3 h-8 w-36 animate-pulse rounded bg-surface-3" />
+        <div className="mt-auto pt-4">
+          <div className="h-3 w-20 animate-pulse rounded bg-surface-3" />
         </div>
-        <div className="h-8 w-36 animate-pulse rounded bg-surface-3" />
       </div>
     );
   }
 
-  return (
-    <div className={`rounded-xl bg-surface-1 p-5${noBorder ? "" : " border border-border-subtle"}`}>
-      {/* 아이콘 + 라벨 같은 행, gap 8px */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {/* 아이콘 원형 컨테이너 */}
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-primary">
-            <Icon size={15} className="text-primary" aria-hidden />
-          </div>
-          <span className="text-body-2 font-medium text-text-tertiary">{label}</span>
-        </div>
-        {action}
-      </div>
+  const valueClass =
+    valueColor === "positive"
+      ? "text-positive"
+      : valueColor === "negative"
+      ? "text-negative"
+      : "text-text-primary";
 
-      {/* 값 */}
-      <p className="flex items-end justify-end gap-2">
-        <span className="text-3xl font-semibold text-text-normal">{value}</span>
+  return (
+    <div className="flex flex-col rounded-xl border border-border-subtle bg-surface-1 p-5">
+      <p className="text-caption font-medium uppercase tracking-wider text-text-tertiary">
+        {label}
+      </p>
+
+      <p className="mt-2 flex items-baseline gap-1.5">
+        <span className={`text-[22px] font-semibold leading-tight tabular-nums ${valueClass}`}>
+          {value}
+        </span>
         {unit && (
-          <span className="text-base font-medium text-primary">{unit}</span>
+          <span className="text-sm font-medium text-primary">{unit}</span>
         )}
       </p>
+
+      <div className="mt-auto pt-4">
+        <Link
+          href={action.href}
+          className="inline-flex items-center gap-1 text-label-2 font-medium text-text-disabled
+            transition-colors hover:text-text-primary
+            focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:rounded-sm focus-visible:outline-offset-2"
+        >
+          {action.label}
+          <ArrowUpRight size={13} aria-hidden />
+        </Link>
+      </div>
     </div>
   );
 });
 
+// ─── ExchangeStatusBar ────────────────────────────────────────────────────────
+
+function ExchangeStatusBar({
+  exchanges,
+  isLoading,
+}: {
+  exchanges?: ReturnType<typeof useOverview>["data"] extends { connectedExchanges: infer T } ? T : never;
+  isLoading: boolean;
+}) {
+  return (
+    <div
+      className="rounded-xl border border-border-subtle bg-surface-1 px-5 py-4"
+      aria-labelledby="exchange-bar-heading"
+    >
+      <p
+        id="exchange-bar-heading"
+        className="mb-3 text-caption font-medium uppercase tracking-wider text-text-tertiary"
+      >
+        Connected Exchanges
+      </p>
+
+      {isLoading ? (
+        <div className="flex gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-8 w-28 animate-pulse rounded-lg bg-surface-2" />
+          ))}
+        </div>
+      ) : !exchanges?.length ? (
+        <p className="text-sm text-text-secondary">
+          No exchanges connected.{" "}
+          <Link
+            href="/mypage/exchanges"
+            className="font-medium text-primary hover:text-primary-strong focus-ring"
+          >
+            Add one →
+          </Link>
+        </p>
+      ) : (
+        <ul
+          className="flex flex-wrap gap-2"
+          role="list"
+          aria-label="Exchange connection status"
+        >
+          {exchanges.map((ex) => {
+            const isError = ex.status === "error";
+            return (
+              <li
+                key={ex.id}
+                className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${
+                  isError
+                    ? "border-negative/30 bg-negative/5"
+                    : "border-border-subtle bg-surface-2"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`h-2 w-2 flex-shrink-0 rounded-full ${
+                    isError ? "bg-negative" : "bg-positive"
+                  }`}
+                />
+                <span className="font-medium text-text-primary">{ex.name}</span>
+                <span
+                  className={`text-xs ${isError ? "text-negative" : "text-positive"}`}
+                  aria-label={`${ex.name}: ${isError ? "Error" : "Connected"}`}
+                >
+                  {isError ? "Error" : "Connected"}
+                </span>
+                {isError && (
+                  <Link
+                    href="/mypage/exchanges"
+                    className="ml-0.5 text-xs font-medium text-primary hover:text-primary-strong
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:rounded-sm"
+                    aria-label={`Reconnect ${ex.name}`}
+                  >
+                    Reconnect →
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ─── RecentActivitySection ────────────────────────────────────────────────────
+
+function RecentActivitySection({
+  openPositions,
+  isLoading,
+}: {
+  openPositions: number;
+  isLoading: boolean;
+}) {
+  return (
+    <div
+      className="rounded-xl border border-border-subtle bg-surface-1 px-5 py-5"
+      aria-labelledby="activity-heading"
+    >
+      <p
+        id="activity-heading"
+        className="mb-4 text-caption font-medium uppercase tracking-wider text-text-tertiary"
+      >
+        {!isLoading && openPositions > 0 ? "My Positions" : "Recent Trades"}
+      </p>
+
+      {isLoading ? (
+        <div className="space-y-2.5" aria-busy="true" aria-label="Loading activity">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-9 animate-pulse rounded-lg bg-surface-2" />
+          ))}
+        </div>
+      ) : openPositions > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm text-text-secondary">
+            You have{" "}
+            <span className="font-semibold text-text-primary">{openPositions}</span>{" "}
+            open {openPositions === 1 ? "position" : "positions"}.
+          </p>
+          <Link
+            href="/mypage/history?section=trade&tab=position"
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary
+              hover:text-primary-strong focus-ring"
+          >
+            View all positions <ArrowUpRight size={14} aria-hidden />
+          </Link>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-3 py-6 text-center">
+          <p className="text-sm text-text-secondary">No open positions right now.</p>
+          <p className="text-xs text-text-tertiary">
+            Explore markets to find your next opportunity.
+          </p>
+          <Link
+            href="#"
+            className="mt-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-text-inverse
+              hover:bg-primary-strong focus-ring"
+            aria-label="Explore markets to start trading"
+          >
+            Explore Markets
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── OverviewPage ─────────────────────────────────────────────────────────────
+
 export function OverviewPage() {
   const { data, isLoading, error, refetch } = useOverview();
-
-  // useCallback: 에러 버튼 클릭 핸들러 안정화
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
-  // useMemo: data 변경 시에만 포맷 연산 재실행
-  const metrics = useMemo(() => {
+  const m = useMemo(() => {
     const s = data?.summary;
+    const pct = s?.pnl24hPct ?? 0;
     return {
-      totalBalance: formatUsdt(s?.totalAssetUsd),
-      availableBalance: formatUsdt(s?.availableBalanceUsd),
-      pnl24h: formatPct(s?.pnl24hPct),
-      usedMargin: formatUsdt(s?.usedMarginUsd),
-      openPositions: String(s?.openPositionsCount ?? 0),
-      connectedExchanges: String(data?.connectedExchanges?.length ?? 0),
+      totalBalance: fmtUsd(s?.totalAssetUsd),
+      availableBalance: fmtUsd(s?.availableBalanceUsd),
+      pnl24h: fmtPct(pct),
+      pnl24hPositive: pct >= 0,
+      todayChange: fmtPct(pct),
+      openPositions: s?.openPositionsCount ?? 0,
     };
   }, [data]);
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <p className="text-sm text-text-secondary">데이터를 불러오지 못했습니다.</p>
+      <div role="alert" className="flex flex-col items-center gap-4 py-16 text-center">
+        <p className="text-sm text-text-secondary">Failed to load data.</p>
         <button
           onClick={handleRetry}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-primary/90"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-text-inverse
+            hover:bg-primary-strong focus-ring"
         >
-          다시 시도
+          Retry
         </button>
       </div>
     );
@@ -131,73 +330,105 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-4">
-      {/* Row 1: Total Balance | Available Balance */}
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-    
-    {/* Gradient Border Wrapper */}
-    <div className="rounded-xl p-[1px] bg-gradient-to-b from-primary/10 to-primary">
-      <div className="h-full w-full rounded-xl bg-surface-1">
-        <MetricCard
-          icon={CircleDollarSign}
-          label="Total Balance"
-          value={metrics.totalBalance}
-          unit="USDT"
-          isLoading={isLoading}
-          noBorder
-        />
-      </div>
-    </div>
 
-    {/* Gradient Border Wrapper */}
-    <div className="rounded-xl p-[1px] bg-gradient-to-b from-primary/10 to-primary">
-      <div className="h-full w-full rounded-xl bg-surface-1">
-        <MetricCard
-          icon={CircleDollarSign}
-          label="Available Balance"
-          value={metrics.availableBalance}
-          unit="USDT"
-          action={TRANSFER_ACTION}
-          isLoading={isLoading}
-          noBorder
-        />
-      </div>
-    </div>
+      {/* ── Row 1: Total Balance + Sparkline ─────────────────────── */}
+      <section aria-labelledby="total-balance-heading">
+        <div className="rounded-xl p-[1px] bg-gradient-to-b from-primary/10 to-primary/60">
+          <div className="rounded-xl bg-surface-1 px-6 pt-6 pb-4">
+            {isLoading ? (
+              <div className="space-y-3">
+                <div className="h-4 w-32 animate-pulse rounded bg-surface-3" />
+                <div className="h-10 w-64 animate-pulse rounded bg-surface-3" />
+                <div className="mt-2 h-12 w-full animate-pulse rounded bg-surface-3" />
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p
+                      id="total-balance-heading"
+                      className="text-caption font-medium uppercase tracking-wider text-text-tertiary"
+                    >
+                      Total Balance
+                    </p>
+                    <p className="mt-1 flex items-baseline gap-2">
+                      <span className="text-[32px] font-bold leading-tight text-text-primary tabular-nums">
+                        {m.totalBalance}
+                      </span>
+                      <span className="text-lg font-semibold text-primary">USDT</span>
+                    </p>
+                  </div>
 
-  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      m.pnl24hPositive
+                        ? "bg-positive/10 text-positive"
+                        : "bg-negative/10 text-negative"
+                    }`}
+                    role="status"
+                    aria-live="polite"
+                    aria-label={`Today's change: ${m.todayChange}`}
+                  >
+                    {m.pnl24hPositive ? "↑" : "↓"} Today {m.todayChange}
+                  </span>
+                </div>
 
-      {/* Row 2: 24H P&L | usedMargin | Open Positions */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <MetricCard
-          icon={BarChart2}
-          label="24H P&L"
-          value={metrics.pnl24h}
-          unit="%"
-          isLoading={isLoading}
-        />
-        <MetricCard
-          icon={Zap}
-          label="usedMargin"
-          value={metrics.usedMargin}
-          unit="USDT"
-          isLoading={isLoading}
-        />
-        <MetricCard
-          icon={Crosshair}
-          label="Open Positions"
-          value={metrics.openPositions}
-          isLoading={isLoading}
-        />
+                {/* Sparkline */}
+                <div className="mt-5" aria-hidden="true">
+                  <Sparkline data={data?.balanceHistory} />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Row 2: Available Balance · 24H P&L · Open Positions ──── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" role="list" aria-label="Key metrics">
+        <div role="listitem">
+          <MetricCard
+            label="Available Balance"
+            value={m.availableBalance}
+            unit="USDT"
+            isLoading={isLoading}
+            action={{ label: "Transfer", href: "/mypage/history?section=transaction&tab=transfer" }}
+          />
+        </div>
+        <div role="listitem">
+          <MetricCard
+            label="24H P&L"
+            value={m.pnl24h}
+            valueColor={isLoading ? "default" : m.pnl24hPositive ? "positive" : "negative"}
+            isLoading={isLoading}
+            action={{ label: "Trade History", href: "/mypage/history?section=trade&tab=order" }}
+          />
+        </div>
+        <div role="listitem">
+          <MetricCard
+            label="Open Positions"
+            value={isLoading ? "—" : m.openPositions === 0 ? "None" : String(m.openPositions)}
+            isLoading={isLoading}
+            action={
+              m.openPositions > 0
+                ? { label: "View Positions", href: "/mypage/history?section=trade&tab=position" }
+                : { label: "Start Trading", href: "#" }
+            }
+          />
+        </div>
       </div>
 
-      {/* Row 3: Connected Exchanges */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <MetricCard
-          icon={Building2}
-          label="Connected Exchanges"
-          value={metrics.connectedExchanges}
-          isLoading={isLoading}
-        />
-      </div>
+      {/* ── Row 3: Connected Exchanges ───────────────────────────── */}
+      <ExchangeStatusBar
+        exchanges={data?.connectedExchanges}
+        isLoading={isLoading}
+      />
+
+      {/* ── Row 4: Recent Activity / My Positions ────────────────── */}
+      <RecentActivitySection
+        openPositions={m.openPositions}
+        isLoading={isLoading}
+      />
+
     </div>
   );
 }

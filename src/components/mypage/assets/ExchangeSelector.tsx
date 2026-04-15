@@ -29,7 +29,7 @@ export function ExchangeSelector({
   return (
     <div
       role="tablist"
-      aria-label="거래소 선택"
+      aria-label="Select exchange"
       className="flex gap-1 rounded-lg bg-surface-2 p-1"
     >
       {tabs.map((tab) => (

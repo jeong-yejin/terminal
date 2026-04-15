@@ -12,11 +12,11 @@ export function OrderHistoryTable({ filters }: OrderHistoryTableProps) {
   const { data, isLoading } = useOrderHistory(filters);
 
   if (isLoading) {
-    return <div className="h-48 animate-pulse rounded-xl bg-surface-1 border border-border-subtle" />;
+    return <div className="h-48 animate-pulse rounded-xl bg-surface-1 border border-border-subtle" aria-busy="true" aria-label="Loading order history" />;
   }
 
   if (!data?.length) {
-    return <div className="py-16 text-center text-sm text-text-secondary">주문 내역이 없습니다.</div>;
+    return <div className="py-16 text-center text-sm text-text-secondary">No order history.</div>;
   }
 
   return (

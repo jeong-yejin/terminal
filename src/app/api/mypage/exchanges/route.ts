@@ -10,6 +10,7 @@ export async function GET() {
       status: "connected",
       connectedAt: "2024-11-10T08:30:00Z",
       apiKeyMasked: "****xK9m",
+      uid: "382940571",
     },
     {
       id: "bybit",
@@ -18,6 +19,7 @@ export async function GET() {
       status: "connected",
       connectedAt: "2025-01-05T14:15:00Z",
       apiKeyMasked: "****rT2p",
+      uid: "910284736",
     },
     {
       id: "okx",
@@ -26,6 +28,7 @@ export async function GET() {
       status: "error",
       connectedAt: "2025-02-18T09:00:00Z",
       apiKeyMasked: "****vB7n",
+      uid: "74820193",
     },
   ];
   return NextResponse.json(data);

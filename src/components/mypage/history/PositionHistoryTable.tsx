@@ -71,7 +71,7 @@ function PositionRow({ row }: { row: PositionHistoryItem }) {
       <td className={`px-4 py-3 font-medium ${pnlPositive ? "text-positive" : "text-negative"}`}>
         {pnlPositive ? "+" : ""}{formatUsd(row.realizedPnlUsd)}
       </td>
-      <td className="px-4 py-3 text-text-secondary" title="예상 수수료 환급액">
+      <td className="px-4 py-3 text-text-secondary" title="Estimated fee rebate">
         {formatUsd(row.estRebateUsd)}
       </td>
       <td className="px-4 py-3 text-text-tertiary">
@@ -98,7 +98,7 @@ function TableSkeleton({ cols }: { cols: number }) {
 function EmptyState() {
   return (
     <div className="py-16 text-center text-sm text-text-secondary">
-      포지션 내역이 없습니다.
+      No position history.
     </div>
   );
 }
