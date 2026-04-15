@@ -1,1 +1,9 @@
 node_modules
+
+# ─── Claude Code ───────────────────────────────────────
+.claude/
+**/.claude/
+.claudeignore
+
+# ─── Settings Code ───────────────────────────────────────
+settings.local.json

@@ -35,16 +35,17 @@ export function SidebarNavItem({
   const isActive = pathname.startsWith(href);
 
   return (
-    <li>
+    <li className="w-full">
       <Link
         href={href}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "group relative flex h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
-          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          // w-full + 좌우 패딩으로 edge-to-edge 하이라이트, rounded 제거
+          "group relative flex h-14 w-full items-center gap-3 px-4 text-sm font-medium transition-colors",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
           isActive
-            ? "bg-surface-2 text-text-primary before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:rounded-r-full before:bg-primary before:content-['']"
-            : "text-text-secondary hover:bg-surface-2/60 hover:text-text-primary"
+            ? "bg-primary/10 text-primary"
+            : "text-text-secondary hover:bg-primary/5 hover:text-text-primary"
         )}
       >
         <Icon
@@ -52,14 +53,11 @@ export function SidebarNavItem({
           size={18}
           className={cn(
             "flex-shrink-0 transition-colors",
-            isActive
-              ? "text-primary"
-              : "text-icon-secondary group-hover:text-text-primary"
+            isActive ? "text-primary" : "text-icon-secondary group-hover:text-text-primary"
           )}
         />
         <span>{label}</span>
 
-        {/* 개발 협의 필요 뱃지 (dev 환경에서만 표시) */}
         {devNote && process.env.NODE_ENV === "development" && (
           <span className="ml-auto rounded bg-yellow-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-yellow-400">
             DEV

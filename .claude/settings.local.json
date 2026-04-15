@@ -6,7 +6,11 @@
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/mypage/overview)",
-      "Bash(echo \"PID: $!\")"
+      "Bash(echo \"PID: $!\")",
+      "mcp__c74936fe-5dcb-4b04-a72e-4301f14ff47e__whoami",
+      "mcp__c74936fe-5dcb-4b04-a72e-4301f14ff47e__get_design_context",
+      "Bash(/usr/local/bin/node \"/Users/umbrellax/Library/Containers/kr.co.metadata.mcp/Data/Library/Application Support/MCP Magic/mcp-server.cjs\")",
+      "Bash(/usr/local/bin/node --version)"
     ]
   }
 }

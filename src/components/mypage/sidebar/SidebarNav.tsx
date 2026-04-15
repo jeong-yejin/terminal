@@ -3,9 +3,8 @@
 import {
   LayoutDashboard,
   Wallet,
-  History,
-  BarChart2,
-  Link2,
+  Clock,
+  Building2,
 } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 
@@ -17,24 +16,18 @@ const NAV_ITEMS = [
   },
   {
     href: "/mypage/assets",
-    label: "Assets",
+    label: "Asset",
     icon: Wallet,
   },
   {
     href: "/mypage/history",
     label: "History",
-    icon: History,
-  },
-  {
-    href: "/mypage/performance",
-    label: "Performance",
-    icon: BarChart2,
-    devNote: "개발단 협의 필요",
+    icon: Clock,
   },
   {
     href: "/mypage/exchanges",
-    label: "Exchanges",
-    icon: Link2,
+    label: "My Exchanges",
+    icon: Building2,
   },
 ] as const;
 
@@ -51,8 +44,9 @@ const NAV_ITEMS = [
  */
 export function SidebarNav() {
   return (
-    <nav className="flex-1 py-2">
-      <ul role="list" className="space-y-0.5 px-2">
+    <nav className="flex-1 w-full py-4">
+      {/* px 없음 — 각 아이템이 사이드바 전체 너비를 차지 */}
+      <ul role="list" className="w-full space-y-0.5">
         {NAV_ITEMS.map((item) => (
           <SidebarNavItem key={item.href} {...item} />
         ))}

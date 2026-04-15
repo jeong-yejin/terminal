@@ -6,7 +6,7 @@ export function useOverview() {
   const { data, error, isLoading, mutate } = useSWR<OverviewData>(
     "/api/mypage/overview",
     fetchOverview,
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 60_000 }
   );
 
   return {
