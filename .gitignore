@@ -7,3 +7,5 @@ node_modules
 
 # ─── Settings Code ───────────────────────────────────────
 settings.local.json
+
+.next
