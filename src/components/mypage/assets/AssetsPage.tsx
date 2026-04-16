@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, TrendingUp, Wallet, ArrowDownToLine } from "lucide-react";
 import { useAssets } from "@/hooks/useAssets";
 import { formatUsd } from "@/lib/format";
+import { DepositModal } from "./DepositModal";
 
 /**
  * Asset overview page (|2|)
@@ -19,6 +21,7 @@ import { formatUsd } from "@/lib/format";
  */
 export function AssetsPage() {
   const { data, isLoading } = useAssets("all");
+  const [depositTarget, setDepositTarget] = useState<{ id: string; name: string } | null>(null);
 
   const totalFunding = data?.reduce((s, e) => s + e.fundingTotalUsd, 0) ?? 0;
   const totalTrading = data?.reduce((s, e) => s + e.tradingTotalUsd, 0) ?? 0;
@@ -35,7 +38,12 @@ export function AssetsPage() {
         </h2>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div
+            aria-busy="true"
+            aria-label="Loading assets"
+            role="status"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+          >
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
@@ -102,7 +110,7 @@ export function AssetsPage() {
       <section aria-labelledby="exchange-list-heading">
         <h2
           id="exchange-list-heading"
-          className="mb-3 text-sm font-medium text-text-secondary"
+          className="mb-3 text-caption font-medium uppercase tracking-wider text-text-tertiary"
         >
           Connected Exchanges
         </h2>
@@ -197,8 +205,10 @@ export function AssetsPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // TODO: open deposit flow for this exchange
-                        // e.g. window.open(`https://${exchange.exchangeId}.com/deposit`, '_blank')
+                        setDepositTarget({
+                          id: exchange.exchangeId,
+                          name: exchange.exchangeName,
+                        });
                       }}
                       className="flex-shrink-0 flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5
                         text-xs font-semibold text-text-inverse
@@ -216,6 +226,16 @@ export function AssetsPage() {
           </ul>
         )}
       </section>
+
+      {/* ── Deposit modal ───────────────────────────────────────────── */}
+      {depositTarget && (
+        <DepositModal
+          exchangeId={depositTarget.id}
+          exchangeName={depositTarget.name}
+          open={true}
+          onClose={() => setDepositTarget(null)}
+        />
+      )}
     </div>
   );
 }

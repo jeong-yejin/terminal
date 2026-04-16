@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { ExchangeConnection } from "@/types/mypage";
 import { cn } from "@/lib/utils";
+import { disconnectExchange } from "@/lib/api/exchanges";
 
 interface ExchangeListProps {
   exchanges?: ExchangeConnection[];
@@ -142,14 +143,18 @@ export function ExchangeList({
 
                 {isConnected && (
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (
                         window.confirm(
                           `Disconnect ${exchange.name}? This will remove all associated API keys.`
                         )
                       ) {
-                        // TODO: DELETE /api/exchanges/:id
-                        onDisconnect?.();
+                        try {
+                          await disconnectExchange(exchange.id);
+                          onDisconnect?.();
+                        } catch {
+                          alert("Failed to disconnect. Please try again.");
+                        }
                       }
                     }}
                     aria-label={`Disconnect ${exchange.name}`}

@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowDownToLine, ArrowLeftRight } from "lucide-react";
+import { ArrowLeft, ArrowDownToLine, ArrowLeftRight, TrendingUp } from "lucide-react";
 import { useAssets } from "@/hooks/useAssets";
-import { formatUsd } from "@/lib/format";
+import { formatUsd, formatPct } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { DepositModal } from "./DepositModal";
 
 interface AssetDetailPageProps {
   exchangeId: string;
@@ -15,16 +18,19 @@ interface AssetDetailPageProps {
  * Shows Funding and Trading account balances for one specific exchange.
  *
  * Action buttons (WCAG-compliant placement — at point of use, not buried in menus):
- *   - Deposit: header area → initiates deposit flow for the Funding account
- *   - Transfer: header area → moves funds between Funding ↔ Trading accounts
+ *   - Trade:    opens trading interface for this exchange
+ *   - Transfer: moves funds between Funding ↔ Trading accounts
+ *   - Deposit:  navigates to deposit flow for the Funding account
  */
 export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
+  const [showQuantity, setShowQuantity] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
   const { data: allData, isLoading } = useAssets("all");
   const exchange = allData?.find((e) => e.exchangeId === exchangeId);
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div aria-busy="true" aria-label="Loading assets" role="status" className="space-y-4">
         <div className="h-8 w-48 animate-pulse rounded-lg bg-surface-2" />
         <div className="h-64 animate-pulse rounded-xl border border-border-subtle bg-surface-1" />
       </div>
@@ -48,13 +54,26 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
 
   const grandTotal = exchange.fundingTotalUsd + exchange.tradingTotalUsd;
 
+  // M2: connection status indicator
+  const statusColor =
+    exchange.status === "connected" ? "bg-green-500" :
+    exchange.status === "error"     ? "bg-red-500" :
+    exchange.status === "disconnected" ? "bg-yellow-400" :
+    "bg-text-tertiary/40";
+  const statusLabel = exchange.status ?? "status unknown";
+  const syncedAt = exchange.lastSyncedAt
+    ? new Date(exchange.lastSyncedAt).toLocaleString("en-US", {
+        hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short",
+      })
+    : null;
+
   return (
     <div className="space-y-6">
 
-      {/* ── Back link ── */}
+      {/* ── Back link — M3: min-h-[44px] WCAG 2.5.5 touch target ── */}
       <Link
         href="/mypage/assets"
-        className="inline-flex items-center gap-1.5 text-xs text-text-tertiary
+        className="inline-flex min-h-[44px] items-center gap-1.5 px-1 text-xs text-text-tertiary
           hover:text-text-primary focus-ring"
         aria-label="Back to Assets overview"
       >
@@ -68,51 +87,64 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
           <h1 className="text-xl font-semibold text-text-primary">
             {exchange.exchangeName}
           </h1>
-          {/* Balance summary badges */}
-          <div className="mt-2 flex flex-wrap gap-2 text-xs" aria-label="Balance summary">
-            <span className="rounded-lg bg-surface-2 px-3 py-1.5 text-text-secondary">
-              Funding{" "}
-              <strong className="text-text-primary">{formatUsd(exchange.fundingTotalUsd)}</strong>
-            </span>
-            <span className="rounded-lg bg-surface-2 px-3 py-1.5 text-text-secondary">
-              Trading{" "}
-              <strong className="text-text-primary">{formatUsd(exchange.tradingTotalUsd)}</strong>
-            </span>
-            <span className="rounded-lg border border-primary/30 bg-accent-primary px-3 py-1.5 text-text-secondary">
-              Total{" "}
-              <strong className="text-primary">{formatUsd(grandTotal)}</strong>
-            </span>
+
+          {/* M2: connection status + last sync */}
+          <div className="mt-1 flex items-center gap-1.5">
+            <span className={cn("h-1.5 w-1.5 rounded-full", statusColor)} aria-hidden />
+            <span className="text-xs text-text-tertiary capitalize">{statusLabel}</span>
+            {syncedAt && (
+              <span className="text-xs text-text-tertiary">· Synced {syncedAt}</span>
+            )}
           </div>
+
+          {/* S1: Grand Total as prominent number — not a chip badge */}
+          <p
+            className="mt-2 text-2xl font-semibold tabular-nums text-text-primary"
+            aria-label="Total balance"
+          >
+            {formatUsd(grandTotal)}
+          </p>
+          <p className="mt-0.5 text-xs text-text-tertiary">Total balance</p>
         </div>
 
         {/*
-          ── Action buttons — placed in the header, adjacent to the asset info,
-          so users can immediately act after viewing their balance (WCAG 3.2.4 /
-          consistent navigation + task proximity principle).
+          ── Action buttons — placed adjacent to balance info for task proximity.
+          All buttons meet WCAG 2.5.5 (min-h-[44px]).
         */}
         <div className="flex items-center gap-2">
-          {/* Transfer: move funds between Funding ↔ Trading */}
+
+          {/* S4: Trade — enter trading interface for this exchange */}
           <Link
-            href={`/mypage/history?section=transaction&tab=transfer`}
-            className="flex items-center gap-1.5 rounded-md border border-border-subtle
-              px-3 py-2 text-sm font-medium text-text-secondary
-              hover:border-primary/40 hover:text-text-primary
-              focus-ring transition-colors"
+            href={`/trade?exchange=${exchangeId}`}
+            className="flex items-center gap-1.5 rounded-md min-h-[44px] px-3 py-2.5
+              border border-border-subtle text-sm font-medium text-text-secondary
+              hover:border-primary/40 hover:text-text-primary focus-ring transition-colors"
+            title="Open trading interface for this exchange"
+            aria-label={`Trade on ${exchange.exchangeName}`}
+          >
+            <TrendingUp size={15} aria-hidden />
+            Trade
+          </Link>
+
+          {/* Transfer: move funds between Funding ↔ Trading — S2: title */}
+          <Link
+            href={`/mypage/history?section=transaction&tab=transfer&exchange=${exchangeId}`}
+            className="flex items-center gap-1.5 rounded-md min-h-[44px] px-3 py-2.5
+              border border-border-subtle text-sm font-medium text-text-secondary
+              hover:border-primary/40 hover:text-text-primary focus-ring transition-colors"
+            title="Move funds between your Funding and Trading accounts"
             aria-label={`Transfer funds on ${exchange.exchangeName}`}
           >
             <ArrowLeftRight size={15} aria-hidden />
             Transfer
           </Link>
 
-          {/* Deposit: add funds to Funding account */}
+          {/* Deposit: opens platform-internal deposit modal */}
           <button
-            onClick={() => {
-              // TODO: navigate to exchange-specific deposit flow
-              // e.g. window.open(`https://${exchangeId}.com/deposit`, '_blank')
-            }}
-            className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-2
-              text-sm font-semibold text-text-inverse
-              hover:bg-primary-strong focus-ring"
+            onClick={() => setDepositOpen(true)}
+            className="flex items-center gap-1.5 rounded-md bg-primary min-h-[44px] px-3 py-2.5
+              text-sm font-semibold text-text-inverse hover:bg-primary-strong focus-ring"
+            title="Add external funds to your Funding account"
             aria-label={`Deposit to ${exchange.exchangeName} Funding account`}
           >
             <ArrowDownToLine size={15} aria-hidden />
@@ -121,12 +153,25 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
         </div>
       </div>
 
+      {/* 🟢 Quantity column toggle — default hidden per UX recommendation */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowQuantity((v) => !v)}
+          className="text-xs text-text-tertiary hover:text-text-primary focus-ring
+            underline-offset-2 hover:underline"
+          aria-pressed={showQuantity}
+        >
+          {showQuantity ? "Hide quantity" : "Show quantity"}
+        </button>
+      </div>
+
       {/* ── Funding Account ── */}
       <AccountSection
         title="Funding Account"
         pairs={exchange.fundingAccount}
         totalUsd={exchange.fundingTotalUsd}
         sectionId={`${exchangeId}-funding`}
+        showQuantity={showQuantity}
       />
 
       {/* ── Trading Account ── */}
@@ -135,8 +180,15 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
         pairs={exchange.tradingAccount}
         totalUsd={exchange.tradingTotalUsd}
         sectionId={`${exchangeId}-trading`}
+        showQuantity={showQuantity}
       />
 
+      <DepositModal
+        exchangeId={exchange.exchangeId}
+        exchangeName={exchange.exchangeName}
+        open={depositOpen}
+        onClose={() => setDepositOpen(false)}
+      />
     </div>
   );
 }
@@ -145,12 +197,16 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
 
 interface AccountSectionProps {
   title: string;
-  pairs: Array<{ symbol: string; quantity: number; valueUsd: number }>;
+  pairs: Array<{ symbol: string; quantity: number; valueUsd: number; changePct24h?: number }>;
   totalUsd: number;
   sectionId: string;
+  showQuantity: boolean;
 }
 
-function AccountSection({ title, pairs, totalUsd, sectionId }: AccountSectionProps) {
+function AccountSection({ title, pairs, totalUsd, sectionId, showQuantity }: AccountSectionProps) {
+  // S3: only render 24h column when at least one pair has the data
+  const hasChange = pairs.some((p) => p.changePct24h !== undefined);
+
   return (
     <section aria-labelledby={`${sectionId}-heading`}>
       <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface-1">
@@ -179,9 +235,17 @@ function AccountSection({ title, pairs, totalUsd, sectionId }: AccountSectionPro
                 <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-text-tertiary">
                   Symbol
                 </th>
-                <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
-                  Quantity
-                </th>
+                {showQuantity && (
+                  <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
+                    Quantity
+                  </th>
+                )}
+                {/* S3: 24h change column */}
+                {hasChange && (
+                  <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
+                    24h
+                  </th>
+                )}
                 <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
                   Value (USD)
                 </th>
@@ -196,9 +260,22 @@ function AccountSection({ title, pairs, totalUsd, sectionId }: AccountSectionPro
                   <td className="px-4 py-2.5 font-medium text-text-primary">
                     {pair.symbol}
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-text-secondary">
-                    {pair.quantity}
-                  </td>
+                  {showQuantity && (
+                    <td className="px-4 py-2.5 text-right tabular-nums text-text-secondary">
+                      {pair.quantity}
+                    </td>
+                  )}
+                  {hasChange && (
+                    <td
+                      className={cn(
+                        "px-4 py-2.5 text-right tabular-nums text-xs",
+                        pair.changePct24h === undefined ? "text-text-tertiary" :
+                        pair.changePct24h >= 0              ? "text-green-500" : "text-red-400"
+                      )}
+                    >
+                      {pair.changePct24h !== undefined ? formatPct(pair.changePct24h) : "—"}
+                    </td>
+                  )}
                   <td className="px-4 py-2.5 text-right font-medium tabular-nums text-text-primary">
                     {formatUsd(pair.valueUsd)}
                   </td>

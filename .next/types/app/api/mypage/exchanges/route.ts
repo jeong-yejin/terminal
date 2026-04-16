@@ -1,4 +1,4 @@
-// File: /Users/jeong-yejin/Documents/terminal/src/app/api/mypage/exchanges/route.ts
+// File: /Users/umbrellax/Documents/terminal/src/app/api/mypage/exchanges/route.ts
 import * as entry from '../../../../../../src/app/api/mypage/exchanges/route.js'
 import type { NextRequest } from 'next/server.js'
 

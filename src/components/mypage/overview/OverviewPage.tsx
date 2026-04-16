@@ -4,7 +4,7 @@ import { memo, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { useOverview } from "@/hooks/useOverview";
-import type { BalanceDataPoint } from "@/types/mypage";
+import type { BalanceDataPoint, ConnectedExchange } from "@/types/mypage";
 
 // ─── Sparkline ────────────────────────────────────────────────────────────────
 
@@ -134,7 +134,7 @@ const MetricCard = memo(function MetricCard({
       <div className="mt-auto pt-4">
         <Link
           href={action.href}
-          className="inline-flex items-center gap-1 text-label-2 font-medium text-text-disabled
+          className="inline-flex items-center gap-1 text-label-2 font-medium text-text-secondary
             transition-colors hover:text-text-primary
             focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:rounded-sm focus-visible:outline-offset-2"
         >
@@ -152,7 +152,7 @@ function ExchangeStatusBar({
   exchanges,
   isLoading,
 }: {
-  exchanges?: ReturnType<typeof useOverview>["data"] extends { connectedExchanges: infer T } ? T : never;
+  exchanges?: ConnectedExchange[];
   isLoading: boolean;
 }) {
   return (
@@ -330,6 +330,7 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-4">
+      <h1 className="text-xl font-semibold text-text-primary">Overview</h1>
 
       {/* ── Row 1: Total Balance + Sparkline ─────────────────────── */}
       <section aria-labelledby="total-balance-heading">

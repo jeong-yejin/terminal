@@ -5,6 +5,7 @@ import {
   Wallet,
   Clock,
   Building2,
+  ChartNoAxesCombined
 } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 
@@ -28,6 +29,11 @@ const NAV_ITEMS = [
     href: "/mypage/exchanges",
     label: "My Exchanges",
     icon: Building2,
+  },
+  {
+    href: "/mypage/performance",
+    label: "Performance",
+    icon: ChartNoAxesCombined,
   },
 ] as const;
 

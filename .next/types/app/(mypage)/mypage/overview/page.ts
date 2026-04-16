@@ -1,4 +1,4 @@
-// File: /Users/jeong-yejin/Documents/terminal/src/app/(mypage)/mypage/overview/page.tsx
+// File: /Users/umbrellax/Documents/terminal/src/app/(mypage)/mypage/overview/page.tsx
 import * as entry from '../../../../../../src/app/(mypage)/mypage/overview/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

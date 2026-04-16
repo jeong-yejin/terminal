@@ -33,3 +33,38 @@ export async function GET() {
   ];
   return NextResponse.json(data);
 }
+
+const EXCHANGE_META: Record<string, { name: string; logoUrl: string }> = {
+  binance: { name: "Binance", logoUrl: "https://cryptologos.cc/logos/binance-coin-bnb-logo.png" },
+  bybit:   { name: "Bybit",   logoUrl: "https://cryptologos.cc/logos/bybit-logo.png" },
+  okx:     { name: "OKX",     logoUrl: "https://cryptologos.cc/logos/okb-okb-logo.png" },
+  bitget:  { name: "Bitget",  logoUrl: "https://cryptologos.cc/logos/bitget-token-bgb-logo.png" },
+};
+
+export async function POST(req: Request) {
+  const body = await req.json().catch(() => ({}));
+  const { exchangeId, apiKey, apiSecret } = body as Record<string, string>;
+
+  if (!exchangeId || !apiKey || !apiSecret) {
+    return NextResponse.json(
+      { error: "exchangeId, apiKey, and apiSecret are required" },
+      { status: 400 }
+    );
+  }
+
+  const meta = EXCHANGE_META[exchangeId] ?? {
+    name: exchangeId,
+    logoUrl: "",
+  };
+
+  const newExchange: ExchangeConnection = {
+    id: exchangeId,
+    name: meta.name,
+    logoUrl: meta.logoUrl,
+    status: "connected",
+    connectedAt: new Date().toISOString(),
+    apiKeyMasked: `****${apiKey.slice(-4)}`,
+  };
+
+  return NextResponse.json(newExchange, { status: 201 });
+}

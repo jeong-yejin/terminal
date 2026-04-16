@@ -12,11 +12,12 @@ interface SidebarProfileProps {
 export function SidebarProfile({ name, email, avatarUrl }: SidebarProfileProps) {
   const [imgError, setImgError] = useState(false);
   const showInitials = !avatarUrl || imgError;
+  const initial = name?.trim().charAt(0).toUpperCase() ?? "";
 
   return (
     <div className="flex flex-col items-center gap-2 px-4 py-4 w-full">
       {/* 아바타 - 크게, 중앙 정렬 */}
-      <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-positive">
+      <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-surface-3">
         {!showInitials ? (
           <Image
             src={avatarUrl!}
@@ -27,7 +28,9 @@ export function SidebarProfile({ name, email, avatarUrl }: SidebarProfileProps) 
             onError={() => setImgError(true)}
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center bg-positive text-sm font-semibold text-white" />
+          <span className="flex h-full w-full items-center justify-center bg-surface-3 text-sm font-semibold text-text-primary">
+            {initial}
+          </span>
         )}
       </div>
 

@@ -26,12 +26,18 @@ export function ExchangeSelector({
 }: ExchangeSelectorProps) {
   const tabs = [{ id: "all", name: "All" }, ...exchanges];
 
+  const handleKeyDown = (e: React.KeyboardEvent, idx: number) => {
+    if (e.key === "ArrowRight") onChange(tabs[(idx + 1) % tabs.length].id);
+    if (e.key === "ArrowLeft") onChange(tabs[(idx - 1 + tabs.length) % tabs.length].id);
+  };
+  
   return (
     <div
       role="tablist"
       aria-label="Select exchange"
       className="flex gap-1 rounded-lg bg-surface-2 p-1"
     >
+      
       {tabs.map((tab) => (
         <button
           key={tab.id}

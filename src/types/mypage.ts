@@ -49,6 +49,8 @@ export interface AssetPair {
   symbol: string;
   quantity: number;
   valueUsd: number;
+  /** 24시간 가격 변동률 (%) — API가 지원하는 경우에만 존재 */
+  changePct24h?: number;
 }
 
 export interface ExchangeAsset {
@@ -58,6 +60,10 @@ export interface ExchangeAsset {
   tradingAccount: AssetPair[];
   fundingTotalUsd: number;
   tradingTotalUsd: number;
+  /** 거래소 API 연결 상태 */
+  status?: ExchangeStatus;
+  /** 마지막 동기화 시각 (ISO 8601) */
+  lastSyncedAt?: string;
 }
 
 // ─── History ──────────────────────────────────────────────────────────────────

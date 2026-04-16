@@ -21,25 +21,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(mypage)/mypage/overview/page.js"
     ],
-    "/(mypage)/mypage/exchanges/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(mypage)/mypage/exchanges/page.js"
-    ],
     "/(mypage)/mypage/assets/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(mypage)/mypage/assets/page.js"
+    ],
+    "/(mypage)/mypage/history/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(mypage)/mypage/history/page.js"
+    ],
+    "/(mypage)/mypage/performance/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(mypage)/mypage/performance/page.js"
     ],
     "/(mypage)/mypage/assets/[exchangeId]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(mypage)/mypage/assets/[exchangeId]/page.js"
     ],
-    "/(mypage)/mypage/history/page": [
+    "/(mypage)/mypage/exchanges/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(mypage)/mypage/history/page.js"
+      "static/chunks/app/(mypage)/mypage/exchanges/page.js"
     ]
   }
 }

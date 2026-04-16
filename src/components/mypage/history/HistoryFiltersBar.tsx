@@ -1,6 +1,7 @@
 "use client";
 
 import type { HistoryFilters } from "@/types/mypage";
+import { useExchanges } from "@/hooks/useExchanges";
 
 interface HistoryFiltersBarProps {
   value: HistoryFilters;
@@ -21,6 +22,8 @@ interface HistoryFiltersBarProps {
  *   - Reset communicates intent clearly
  */
 export function HistoryFiltersBar({ value, onChange }: HistoryFiltersBarProps) {
+  const { data: exchanges } = useExchanges();
+
   const handleExchangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange({ ...value, exchangeId: e.target.value });
   };
@@ -52,7 +55,11 @@ export function HistoryFiltersBar({ value, onChange }: HistoryFiltersBarProps) {
           focus-ring cursor-pointer"
       >
         <option value="all">All Exchanges</option>
-        {/* TODO: dynamically render connected exchanges */}
+        {exchanges?.map((ex) => (
+          <option key={ex.id} value={ex.id}>
+            {ex.name}
+          </option>
+        ))}
       </select>
 
       {/* Start date */}

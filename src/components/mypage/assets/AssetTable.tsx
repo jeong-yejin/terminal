@@ -1,7 +1,8 @@
 "use client";
 
 import type { ExchangeAsset } from "@/types/mypage";
-import { formatUsd } from "@/lib/format";
+import { formatUsd, formatPct } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 interface AssetTableProps {
   data?: ExchangeAsset[];
@@ -16,7 +17,7 @@ interface AssetTableProps {
  *   - Funding Account 섹션 → 페어별 행
  *   - Trading Account 섹션 → 페어별 행
  *
- * 컬럼: Symbol / Quantity / Value (USD)
+ * 컬럼: Symbol / Value (USD) / 24h (데이터 있을 때만)
  *
  * 빈 상태: "보유 자산이 없습니다"
  * 로딩: 스켈레톤 행 3개
@@ -78,23 +79,46 @@ function AccountSection({
 }) {
   if (!pairs.length) return null;
 
+  const hasChange = pairs.some((p) => p.changePct24h !== undefined);
+
   return (
     <div>
       <p className="px-4 py-2 text-xs font-medium text-text-tertiary">{title}</p>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border-subtle bg-surface-2/30">
-            <th className="px-4 py-2 text-left text-xs font-medium text-text-tertiary">Symbol</th>
-            <th className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">Quantity</th>
-            <th className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">Value (USD)</th>
+            <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-text-tertiary">
+              Symbol
+            </th>
+            {/* S3: 24h change column */}
+            {hasChange && (
+              <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
+                24h
+              </th>
+            )}
+            <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
+              Value (USD)
+            </th>
           </tr>
         </thead>
         <tbody>
           {pairs.map((pair) => (
             <tr key={pair.symbol} className="border-b border-white/10 last:border-0">
               <td className="px-4 py-2.5 font-medium text-text-primary">{pair.symbol}</td>
-              <td className="px-4 py-2.5 text-right text-text-secondary">{pair.quantity}</td>
-              <td className="px-4 py-2.5 text-right font-medium text-text-primary">{formatUsd(pair.valueUsd)}</td>
+              {hasChange && (
+                <td
+                  className={cn(
+                    "px-4 py-2.5 text-right tabular-nums text-xs",
+                    pair.changePct24h === undefined ? "text-text-tertiary" :
+                    pair.changePct24h >= 0              ? "text-green-500" : "text-red-400"
+                  )}
+                >
+                  {pair.changePct24h !== undefined ? formatPct(pair.changePct24h) : "—"}
+                </td>
+              )}
+              <td className="px-4 py-2.5 text-right font-medium tabular-nums text-text-primary">
+                {formatUsd(pair.valueUsd)}
+              </td>
             </tr>
           ))}
         </tbody>
