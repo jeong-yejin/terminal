@@ -21,7 +21,7 @@ export function PerformanceTable({ data, isLoading }: PerformanceTableProps) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border-subtle bg-surface-2">
-            {["Exchange", "P&L (USD)", "P&L (%)"].map((h) => (
+            {["Exchange", "P&L (USD)", "P&L (%)", "Est. Rebate"].map((h) => (
               <th key={h} className="px-5 py-3 text-left text-xs font-medium text-text-tertiary">{h}</th>
             ))}
           </tr>
@@ -35,6 +35,9 @@ export function PerformanceTable({ data, isLoading }: PerformanceTableProps) {
               </td>
               <td className={`px-5 py-3 ${row.pnlPct >= 0 ? "text-positive" : "text-negative"}`}>
                 {formatPct(row.pnlPct)}
+              </td>
+              <td className="px-5 py-3 font-medium text-positive" title="Estimated fee rebate from ReboundX">
+                {row.rebateUsd != null ? `+${formatUsd(row.rebateUsd)}` : "—"}
               </td>
             </tr>
           ))}

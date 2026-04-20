@@ -1,85 +1,151 @@
 "use client";
 
+import { useState } from "react";
+import { Share2 } from "lucide-react";
 import type { HistoryFilters, PositionHistoryItem } from "@/types/mypage";
 import { formatUsd } from "@/lib/format";
 import { usePositionHistory } from "@/hooks/useHistory";
+import { PnlShareModal } from "./PnlShareModal";
 
 interface PositionHistoryTableProps {
   filters: HistoryFilters;
 }
 
 /**
- * Position History 테이블
+ * Position History 테이블 (Futures 전용)
  *
  * 컬럼:
- *   - Exchange / Symbol / Side / Entry Price / Exit Price
- *   - Realized P&L (색상: 양수 green / 음수 red)
- *   - Est. Rebate (개발 확인 필요: 이전 거래 P&L 수치 확인)
+ *   - Exchange / Symbol / Side / Entry / Exit
+ *   - Realized P&L  (색상 강조)
+ *   - ROE %         (realizedPnl ÷ notional × 100, 레버리지 미포함 근사)
+ *   - Est. Rebate
  *   - Closed At
- *
- * 스펙:
- *   - Realized P&L: color-positive / color-negative
- *   - Est. Rebate: color-text-secondary, 툴팁 "예상 수수료 환급액"
+ *   - Share         → PnlShareModal
  */
 export function PositionHistoryTable({ filters }: PositionHistoryTableProps) {
   const { data, isLoading } = usePositionHistory(filters);
+  const [sharingPosition, setSharingPosition] = useState<PositionHistoryItem | null>(null);
 
-  if (isLoading) return <TableSkeleton cols={8} />;
+  if (isLoading) return <TableSkeleton cols={9} />;
   if (!data?.length) return <EmptyState />;
 
   return (
-    <div
-      id="tabpanel-position"
-      role="tabpanel"
-      aria-labelledby="tab-position"
-      className="overflow-x-auto"
-    >
-      <table className="w-full min-w-max text-sm">
-        <thead>
-          <tr className="border-b border-border-subtle bg-surface-2">
-            {["Exchange", "Symbol", "Side", "Entry", "Exit", "Realized P&L", "Est. Rebate", "Closed At"].map((h) => (
-              <th key={h} className="px-4 py-3 text-left text-xs font-medium text-text-tertiary">
-                {h}
-              </th>
+    <>
+      <div
+        id="tabpanel-position"
+        role="tabpanel"
+        aria-labelledby="tab-position"
+        className="overflow-x-auto"
+      >
+        <table className="w-full min-w-max text-sm">
+          <thead>
+            <tr className="border-b border-border-subtle bg-surface-2">
+              {[
+                "Exchange", "Symbol", "Side",
+                "Entry", "Exit",
+                "Realized P&L", "ROE", "Est. Rebate",
+                "Closed At", "",
+              ].map((h) => (
+                <th
+                  key={h}
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text-tertiary"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <PositionRow
+                key={row.id}
+                row={row}
+                onShare={() => setSharingPosition(row)}
+              />
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row) => (
-            <PositionRow key={row.id} row={row} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+
+      {/* P&L Share Modal */}
+      {sharingPosition && (
+        <PnlShareModal
+          position={sharingPosition}
+          open={true}
+          onClose={() => setSharingPosition(null)}
+        />
+      )}
+    </>
   );
 }
 
-function PositionRow({ row }: { row: PositionHistoryItem }) {
+// ─── PositionRow ──────────────────────────────────────────────────────────────
+
+interface PositionRowProps {
+  row: PositionHistoryItem;
+  onShare: () => void;
+}
+
+function PositionRow({ row, onShare }: PositionRowProps) {
   const pnlPositive = row.realizedPnlUsd >= 0;
 
+  // ROE = realizedPnl / notional × 100 (레버리지 미포함 근사)
+  const notional = row.entryPrice * row.quantity;
+  const roe = notional > 0 ? (row.realizedPnlUsd / notional) * 100 : 0;
+  const roePositive = roe >= 0;
+
   return (
-    <tr className="border-b border-white/10 hover:bg-surface-2/30">
+    <tr className="group border-b border-white/10 hover:bg-surface-2/30 last:border-0">
       <td className="px-4 py-3 text-text-secondary">{row.exchangeId}</td>
       <td className="px-4 py-3 font-medium text-text-primary">{row.symbol}</td>
       <td className="px-4 py-3">
-        <span className={row.side === "long" ? "text-positive" : "text-negative"}>
-          {row.side.toUpperCase()}
+        <span className={`font-semibold ${row.side === "long" ? "text-positive" : "text-negative"}`}>
+          {row.side === "long" ? "▲" : "▼"} {row.side.toUpperCase()}
         </span>
       </td>
-      <td className="px-4 py-3 text-text-secondary">{formatUsd(row.entryPrice)}</td>
-      <td className="px-4 py-3 text-text-secondary">{formatUsd(row.exitPrice)}</td>
-      <td className={`px-4 py-3 font-medium ${pnlPositive ? "text-positive" : "text-negative"}`}>
+      <td className="px-4 py-3 tabular-nums text-text-secondary">{formatUsd(row.entryPrice)}</td>
+      <td className="px-4 py-3 tabular-nums text-text-secondary">{formatUsd(row.exitPrice)}</td>
+
+      {/* Realized P&L — 핵심 수치, 강조 */}
+      <td className={`px-4 py-3 font-semibold tabular-nums ${pnlPositive ? "text-positive" : "text-negative"}`}>
         {pnlPositive ? "+" : ""}{formatUsd(row.realizedPnlUsd)}
       </td>
-      <td className="px-4 py-3 text-text-secondary" title="Estimated fee rebate">
-        {formatUsd(row.estRebateUsd)}
+
+      {/* ROE */}
+      <td className={`px-4 py-3 text-xs font-medium tabular-nums ${roePositive ? "text-positive/80" : "text-negative/80"}`}>
+        {roePositive ? "+" : ""}{roe.toFixed(2)}%
       </td>
+
+      {/* Est. Rebate */}
+      <td className="px-4 py-3 font-medium tabular-nums text-positive" title="Estimated fee rebate from ReboundX">
+        +{formatUsd(row.estRebateUsd)}
+      </td>
+
       <td className="px-4 py-3 text-text-tertiary">
         {new Date(row.closedAt).toLocaleDateString()}
+      </td>
+
+      {/* Share — row hover 시 노출 */}
+      <td className="px-4 py-3">
+        <button
+          onClick={onShare}
+          aria-label={`Share ${row.symbol} trade result`}
+          title="Share trade result"
+          className="flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1.5
+            text-xs font-medium text-text-tertiary
+            opacity-0 transition-all group-hover:opacity-100 focus-visible:opacity-100
+            hover:border-primary/40 hover:text-text-primary focus-ring"
+        >
+          <Share2 size={12} aria-hidden />
+          Share
+        </button>
       </td>
     </tr>
   );
 }
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
 
 function TableSkeleton({ cols }: { cols: number }) {
   return (

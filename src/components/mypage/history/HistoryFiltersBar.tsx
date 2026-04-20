@@ -1,28 +1,38 @@
 "use client";
 
-import type { HistoryFilters } from "@/types/mypage";
+import { cn } from "@/lib/utils";
+import type { HistoryFilters, MarketType } from "@/types/mypage";
+import type { HistorySection } from "./HistoryTabs";
 import { useExchanges } from "@/hooks/useExchanges";
 
 interface HistoryFiltersBarProps {
+  section: HistorySection;
   value: HistoryFilters;
   onChange: (filters: HistoryFilters) => void;
 }
+
+const MARKET_TYPE_OPTIONS: { id: MarketType | "all"; label: string }[] = [
+  { id: "all",     label: "All" },
+  { id: "spot",    label: "Spot" },
+  { id: "futures", label: "Futures" },
+];
 
 /**
  * Shared filter bar — used across all History tabs
  *
  * Filters:
+ *   - Market Type chip (Spot / Futures / All) — Trade History 섹션 전용
  *   - Exchange (All + connected exchanges)
  *   - Date range: start ~ end (max 90 days)
  *   - Reset button
- *
- * WCAG:
- *   - Explicit <label> associations via aria-label
- *   - Consistent focus-ring on all interactive elements
- *   - Reset communicates intent clearly
  */
-export function HistoryFiltersBar({ value, onChange }: HistoryFiltersBarProps) {
+export function HistoryFiltersBar({ section, value, onChange }: HistoryFiltersBarProps) {
   const { data: exchanges } = useExchanges();
+  const activeMarket = value.marketType ?? "all";
+
+  const handleMarketType = (mt: MarketType | "all") => {
+    onChange({ ...value, marketType: mt });
+  };
 
   const handleExchangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange({ ...value, exchangeId: e.target.value });
@@ -37,7 +47,7 @@ export function HistoryFiltersBar({ value, onChange }: HistoryFiltersBarProps) {
   };
 
   const handleReset = () => {
-    onChange({ exchangeId: "all" });
+    onChange({ exchangeId: "all", marketType: "all" });
   };
 
   return (
@@ -46,6 +56,34 @@ export function HistoryFiltersBar({ value, onChange }: HistoryFiltersBarProps) {
       role="group"
       aria-label="History filters"
     >
+      {/* Market Type chip — Trade 섹션 전용 */}
+      {section === "trade" && (
+        <div
+          role="group"
+          aria-label="Filter by market type"
+          className="flex rounded-lg border border-border-subtle bg-surface-1 p-0.5"
+        >
+          {MARKET_TYPE_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => handleMarketType(opt.id)}
+              aria-pressed={activeMarket === opt.id}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-1",
+                activeMarket === opt.id
+                  ? opt.id === "futures"
+                    ? "bg-primary/10 text-primary"
+                    : "bg-surface-2 text-text-primary"
+                  : "text-text-tertiary hover:text-text-secondary"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Exchange filter */}
       <select
         value={value.exchangeId ?? "all"}

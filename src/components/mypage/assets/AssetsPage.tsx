@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, TrendingUp, Wallet, ArrowDownToLine } from "lucide-react";
+import { ChevronRight, TrendingUp, Wallet, ArrowDownToLine, ArrowLeftRight, ArrowUpToLine, ExternalLink } from "lucide-react";
 import { useAssets } from "@/hooks/useAssets";
 import { formatUsd } from "@/lib/format";
+import { getWithdrawUrl } from "@/lib/exchangeUrls";
 import { DepositModal } from "./DepositModal";
+import { ExchangePnlBar } from "@/components/mypage/performance/ExchangePnlBar";
+import { usePerformance } from "@/hooks/usePerformance";
 
 /**
  * Asset overview page (|2|)
@@ -21,11 +24,13 @@ import { DepositModal } from "./DepositModal";
  */
 export function AssetsPage() {
   const { data, isLoading } = useAssets("all");
+  const { data: perfData, isLoading: perfLoading } = usePerformance();
   const [depositTarget, setDepositTarget] = useState<{ id: string; name: string } | null>(null);
 
   const totalFunding = data?.reduce((s, e) => s + e.fundingTotalUsd, 0) ?? 0;
-  const totalTrading = data?.reduce((s, e) => s + e.tradingTotalUsd, 0) ?? 0;
-  const grandTotal = totalFunding + totalTrading;
+  const totalSpot    = data?.reduce((s, e) => s + (e.spotTotalUsd ?? 0), 0) ?? 0;
+  const totalFutures = data?.reduce((s, e) => s + (e.futuresTotalUsd ?? 0), 0) ?? 0;
+  const grandTotal   = totalFunding + totalSpot + totalFutures;
 
   return (
     <div className="space-y-6">
@@ -71,40 +76,43 @@ export function AssetsPage() {
               </div>
             </div>
 
-            {/* Funding Total */}
+            {/* Spot Total */}
             <div className="rounded-xl border border-border-subtle bg-surface-1 p-5">
               <div className="mb-3 flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-2">
                   <Wallet size={14} className="text-text-secondary" aria-hidden />
                 </div>
                 <span className="text-caption font-medium text-text-tertiary">
-                  Total Funding
+                  Total Spot
                 </span>
               </div>
               <p className="text-[22px] font-semibold text-text-primary tabular-nums">
-                {formatUsd(totalFunding)}
+                {formatUsd(totalSpot)}
               </p>
               <p className="mt-0.5 text-xs text-text-tertiary">USDT</p>
             </div>
 
-            {/* Trading Total */}
+            {/* Futures Total */}
             <div className="rounded-xl border border-border-subtle bg-surface-1 p-5">
               <div className="mb-3 flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-2">
                   <TrendingUp size={14} className="text-text-secondary" aria-hidden />
                 </div>
                 <span className="text-caption font-medium text-text-tertiary">
-                  Total Trading
+                  Total Futures
                 </span>
               </div>
               <p className="text-[22px] font-semibold text-text-primary tabular-nums">
-                {formatUsd(totalTrading)}
+                {formatUsd(totalFutures)}
               </p>
               <p className="mt-0.5 text-xs text-text-tertiary">USDT</p>
             </div>
           </div>
         )}
       </section>
+
+      {/* ── P&L by Exchange ───────────────────────────────────────── */}
+      <ExchangePnlBar data={perfData?.exchangePnlBreakdown} isLoading={perfLoading} />
 
       {/* ── Per-exchange cards ─────────────────────────────────────── */}
       <section aria-labelledby="exchange-list-heading">
@@ -141,8 +149,8 @@ export function AssetsPage() {
         ) : (
           <ul role="list" className="space-y-3">
             {data.map((exchange) => {
-              const total = exchange.fundingTotalUsd + exchange.tradingTotalUsd;
-              const topAssets = [...exchange.fundingAccount, ...exchange.tradingAccount]
+              const total = exchange.fundingTotalUsd + (exchange.spotTotalUsd ?? 0) + (exchange.futuresTotalUsd ?? 0);
+              const topAssets = [...(exchange.fundingAccount ?? []), ...(exchange.spotAccount ?? []), ...(exchange.futuresAccount ?? [])]
                 .sort((a, b) => b.valueUsd - a.valueUsd)
                 .slice(0, 3);
 
@@ -168,18 +176,18 @@ export function AssetsPage() {
                         </p>
                       </div>
 
-                      {/* Funding / Trading breakdown */}
+                      {/* Spot / Futures breakdown */}
                       <div className="flex flex-1 gap-6 text-xs">
                         <div>
-                          <p className="text-text-tertiary">Funding</p>
+                          <p className="text-text-tertiary">Spot</p>
                           <p className="mt-0.5 font-medium tabular-nums text-text-secondary">
-                            {formatUsd(exchange.fundingTotalUsd)}
+                            {formatUsd(exchange.spotTotalUsd)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-text-tertiary">Trading</p>
+                          <p className="text-text-tertiary">Futures</p>
                           <p className="mt-0.5 font-medium tabular-nums text-text-secondary">
-                            {formatUsd(exchange.tradingTotalUsd)}
+                            {formatUsd(exchange.futuresTotalUsd)}
                           </p>
                         </div>
                       </div>
@@ -199,25 +207,59 @@ export function AssetsPage() {
                       />
                     </Link>
 
-                    {/* ── Deposit button — right side, separated from the nav link
-                        so it's a distinct action and doesn't confuse keyboard/
-                        screen-reader users (WCAG 1.3.1, 2.4.6) ── */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDepositTarget({
-                          id: exchange.exchangeId,
-                          name: exchange.exchangeName,
-                        });
-                      }}
-                      className="flex-shrink-0 flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5
-                        text-xs font-semibold text-text-inverse
-                        hover:bg-primary-strong focus-ring"
-                      aria-label={`Deposit to ${exchange.exchangeName}`}
-                    >
-                      <ArrowDownToLine size={13} aria-hidden />
-                      Deposit
-                    </button>
+                    {/* ── Action buttons — 링크와 별도 영역으로 분리 (WCAG 1.3.1, 2.4.6) ── */}
+                    <div className="flex-shrink-0 flex items-center gap-1.5">
+
+                      {/* Transfer — 서비스 내부 (계좌 간 이체) */}
+                      <Link
+                        href={`/mypage/history?section=transaction&tab=transfer&exchange=${exchange.exchangeId}`}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Transfer between accounts"
+                        aria-label={`Transfer funds on ${exchange.exchangeName}`}
+                        className="flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle
+                          text-text-tertiary hover:border-primary/30 hover:text-text-primary
+                          transition-colors focus-ring"
+                      >
+                        <ArrowLeftRight size={14} aria-hidden />
+                      </Link>
+
+                      {/* Withdraw — 거래소 외부 처리 (external link) */}
+                      <a
+                        href={getWithdrawUrl(exchange.exchangeId)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        title={`Withdraw on ${exchange.exchangeName} (opens exchange website)`}
+                        aria-label={`Withdraw from ${exchange.exchangeName} — opens exchange website`}
+                        className="flex h-8 items-center gap-1 rounded-md border border-border-subtle px-2.5
+                          text-xs font-medium text-text-tertiary
+                          hover:border-primary/30 hover:text-text-primary
+                          transition-colors focus-ring"
+                      >
+                        <ArrowUpToLine size={13} aria-hidden />
+                        <span>Withdraw</span>
+                        <ExternalLink size={10} className="text-text-tertiary" aria-hidden />
+                      </a>
+
+                      {/* Deposit — 서비스 내부 (primary CTA) */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDepositTarget({
+                            id: exchange.exchangeId,
+                            name: exchange.exchangeName,
+                          });
+                        }}
+                        className="flex h-8 items-center gap-1.5 rounded-md bg-primary px-3
+                          text-xs font-semibold text-text-inverse
+                          hover:bg-primary-strong focus-ring"
+                        aria-label={`Deposit to ${exchange.exchangeName}`}
+                      >
+                        <ArrowDownToLine size={13} aria-hidden />
+                        Deposit
+                      </button>
+
+                    </div>
 
                   </div>
                 </li>

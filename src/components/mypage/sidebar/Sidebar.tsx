@@ -10,8 +10,7 @@ export function Sidebar() {
   const { data: user } = useUser();
 
   return (
-    // Figma 스펙: bg-[#262626] flex flex-col rounded-[16px] shrink-0 items-start relative
-    <aside className="relative hidden md:flex w-60 flex flex-col items-center overflow-hidden rounded-2xl bg-surface-2">
+    <aside className="relative hidden md:flex w-60 flex-col items-center overflow-hidden rounded-2xl bg-surface-2">
       <SidebarProfile
         name={user?.name}
         email={user?.email}

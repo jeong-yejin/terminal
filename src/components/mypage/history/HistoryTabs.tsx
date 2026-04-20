@@ -16,10 +16,10 @@ const SECTIONS: { id: HistorySection; label: string }[] = [
   { id: "transaction", label: "Transaction History" },
 ];
 
-const TRADE_TABS: { id: TradeTab; label: string }[] = [
-  { id: "order", label: "Order History" },
-  { id: "trade", label: "Trade History" },
-  { id: "position", label: "Position History" },
+const TRADE_TABS: { id: TradeTab; label: string; badge?: string }[] = [
+  { id: "order",    label: "Order History" },
+  { id: "trade",    label: "Trade History" },
+  { id: "position", label: "Position History", badge: "FUTURES" },
 ];
 
 const TRANSACTION_TABS: { id: TransactionTab; label: string }[] = [
@@ -126,7 +126,7 @@ export function HistoryTabs({ section, tab, onSectionChange, onTabChange }: Hist
               onKeyDown={(e) => handleTabKey(e, idx)}
               tabIndex={tab === t.id ? 0 : -1}
               className={cn(
-                "px-4 py-2.5 text-sm font-medium transition-colors",
+                "inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[-2px]",
                 tab === t.id
                   ? "border-b-2 border-primary text-text-primary"
@@ -134,6 +134,11 @@ export function HistoryTabs({ section, tab, onSectionChange, onTabChange }: Hist
               )}
             >
               {t.label}
+              {"badge" in t && t.badge && (
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
+                  {t.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>

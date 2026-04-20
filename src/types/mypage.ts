@@ -45,6 +45,8 @@ export interface OverviewData {
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
 
+export type MarketType = "spot" | "futures";
+
 export interface AssetPair {
   symbol: string;
   quantity: number;
@@ -53,13 +55,26 @@ export interface AssetPair {
   changePct24h?: number;
 }
 
+/** Futures 계정 전용 — 증거금 + 미실현 손익 */
+export interface FuturesAssetPair extends AssetPair {
+  /** 미실현 손익 (USD) */
+  unrealizedPnlUsd?: number;
+  /** 마진 방식 */
+  marginType?: "cross" | "isolated";
+}
+
 export interface ExchangeAsset {
   exchangeId: ExchangeId;
   exchangeName: string;
+  /** 입출금 대기 잔고 */
   fundingAccount: AssetPair[];
-  tradingAccount: AssetPair[];
   fundingTotalUsd: number;
-  tradingTotalUsd: number;
+  /** 현물 거래 잔고 — 거래소에 따라 없을 수 있음 */
+  spotAccount?: AssetPair[];
+  spotTotalUsd?: number;
+  /** 선물(Perp) 증거금 잔고 — 거래소에 따라 없을 수 있음 */
+  futuresAccount?: FuturesAssetPair[];
+  futuresTotalUsd?: number;
   /** 거래소 API 연결 상태 */
   status?: ExchangeStatus;
   /** 마지막 동기화 시각 (ISO 8601) */
@@ -80,6 +95,7 @@ export interface OrderHistoryItem {
   price: number;
   quantity: number;
   status: OrderStatus;
+  marketType: MarketType;
   createdAt: string; // ISO 8601
 }
 
@@ -91,6 +107,7 @@ export interface TradeHistoryItem {
   price: number;
   quantity: number;
   fee: number;
+  marketType: MarketType;
   executedAt: string;
 }
 
@@ -120,14 +137,16 @@ export interface DepositHistoryItem {
   createdAt: string;
 }
 
-/** Funding ↔ Trading 계좌 간 내부 이체 내역 */
+export type AccountType = "funding" | "spot" | "futures";
+
+/** 계좌 간 내부 이체 내역 (Funding ↔ Spot ↔ Futures) */
 export interface TransferHistoryItem {
   id: string;
   exchangeId: ExchangeId;
   asset: string;
   amount: number;
-  fromAccount: "funding" | "trading";
-  toAccount: "funding" | "trading";
+  fromAccount: AccountType;
+  toAccount: AccountType;
   status: TransactionStatus;
   createdAt: string;
 }
@@ -151,6 +170,8 @@ export interface HistoryFilters {
   exchangeId?: ExchangeId | "all";
   startDate?: string;
   endDate?: string;
+  /** Trade History 전용 — spot / futures / all */
+  marketType?: MarketType | "all";
 }
 
 // ─── Performance ──────────────────────────────────────────────────────────────
@@ -165,6 +186,8 @@ export interface ExchangePnlBreakdown {
   exchangeName: string;
   pnlUsd: number;
   pnlPct: number;
+  /** 해당 거래소에서 발생한 예상 환급 수수료 (USD) */
+  rebateUsd?: number;
 }
 
 export interface PerformanceData {

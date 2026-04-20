@@ -15,9 +15,9 @@ export async function GET() {
   const data: PerformanceData = {
     pnlChart,
     exchangePnlBreakdown: [
-      { exchangeId: "binance", exchangeName: "Binance", pnlUsd: 12_480.30, pnlPct: 8.8 },
-      { exchangeId: "bybit",   exchangeName: "Bybit",   pnlUsd: 4_210.90,  pnlPct: 4.4 },
-      { exchangeId: "okx",     exchangeName: "OKX",     pnlUsd: -820.15,   pnlPct: -2.5 },
+      { exchangeId: "binance", exchangeName: "Binance", pnlUsd: 12_480.30, pnlPct: 8.8,  rebateUsd: 621.40 },
+      { exchangeId: "bybit",   exchangeName: "Bybit",   pnlUsd: 4_210.90,  pnlPct: 4.4,  rebateUsd: 312.88 },
+      { exchangeId: "okx",     exchangeName: "OKX",     pnlUsd: -820.15,   pnlPct: -2.5, rebateUsd: 210.44 },
     ],
     totalFeePaidUsd: 3_812.40,
     totalRebateReceivedUsd: 1_144.72,

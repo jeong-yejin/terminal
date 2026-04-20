@@ -13,6 +13,8 @@ import { PositionHistoryTable } from "./PositionHistoryTable";
 import { DepositHistoryTable } from "./DepositHistoryTable";
 import { TransferHistoryTable } from "./TransferHistoryTable";
 import { WithdrawHistoryTable } from "./WithdrawHistoryTable";
+import { PnlChart } from "@/components/mypage/performance/PnlChart";
+import { usePerformance } from "@/hooks/usePerformance";
 import type { HistoryFilters } from "@/types/mypage";
 
 /**
@@ -35,6 +37,7 @@ export function HistoryPage() {
   const [filters, setFilters] = useState<HistoryFilters>({
     exchangeId: "all",
   });
+  const { data: perfData, isLoading: perfLoading } = usePerformance();
 
   return (
     <div className="space-y-5">
@@ -43,11 +46,20 @@ export function HistoryPage() {
       <HistoryTabs
         section={activeSection}
         tab={activeTab}
-        onSectionChange={setActiveSection}
+        onSectionChange={(s) => {
+          setActiveSection(s);
+          // 섹션 전환 시 marketType 필터 초기화
+          setFilters((prev) => ({ ...prev, marketType: "all" }));
+        }}
         onTabChange={setActiveTab}
       />
 
-      <HistoryFiltersBar value={filters} onChange={setFilters} />
+      <HistoryFiltersBar section={activeSection} value={filters} onChange={setFilters} />
+
+      {/* ── Trade 섹션 전용: P&L 차트 ── */}
+      {activeSection === "trade" && (
+        <PnlChart data={perfData?.pnlChart} isLoading={perfLoading} />
+      )}
 
       {/* ── Trade History 탭패널 ── */}
       {activeTab === "order" && (

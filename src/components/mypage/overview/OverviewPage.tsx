@@ -2,8 +2,9 @@
 
 import { memo, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, TrendingUp } from "lucide-react";
 import { useOverview } from "@/hooks/useOverview";
+import { usePerformance } from "@/hooks/usePerformance";
 import type { BalanceDataPoint, ConnectedExchange } from "@/types/mypage";
 
 // ─── Sparkline ────────────────────────────────────────────────────────────────
@@ -298,6 +299,7 @@ function RecentActivitySection({
 
 export function OverviewPage() {
   const { data, isLoading, error, refetch } = useOverview();
+  const { data: perfData, isLoading: perfLoading } = usePerformance();
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
   const m = useMemo(() => {
@@ -306,6 +308,8 @@ export function OverviewPage() {
     return {
       totalBalance: fmtUsd(s?.totalAssetUsd),
       availableBalance: fmtUsd(s?.availableBalanceUsd),
+      fundingTotal: fmtUsd(s?.fundingTotalUsd),
+      tradingTotal: fmtUsd(s?.tradingTotalUsd),
       pnl24h: fmtPct(pct),
       pnl24hPositive: pct >= 0,
       todayChange: fmtPct(pct),
@@ -350,7 +354,7 @@ export function OverviewPage() {
                       id="total-balance-heading"
                       className="text-caption font-medium uppercase tracking-wider text-text-tertiary"
                     >
-                      Total Balance
+                      Total Assets
                     </p>
                     <p className="mt-1 flex items-baseline gap-2">
                       <span className="text-[32px] font-bold leading-tight text-text-primary tabular-nums">
@@ -358,6 +362,21 @@ export function OverviewPage() {
                       </span>
                       <span className="text-lg font-semibold text-primary">USDT</span>
                     </p>
+                    <div className="mt-2 flex items-center gap-4">
+                      <span className="text-xs text-text-tertiary">
+                        Funding{" "}
+                        <span className="font-medium text-text-secondary tabular-nums">
+                          {m.fundingTotal} USDT
+                        </span>
+                      </span>
+                      <span className="text-border-subtle select-none">·</span>
+                      <span className="text-xs text-text-tertiary">
+                        Trading{" "}
+                        <span className="font-medium text-text-secondary tabular-nums">
+                          {m.tradingTotal} USDT
+                        </span>
+                      </span>
+                    </div>
                   </div>
 
                   <span
@@ -378,14 +397,29 @@ export function OverviewPage() {
                 <div className="mt-5" aria-hidden="true">
                   <Sparkline data={data?.balanceHistory} />
                 </div>
+
+                {/* Go to Trading — 잔고 확인 직후 자연스러운 거래 진입 지점 */}
+                <div className="mt-4 flex justify-end">
+                  <Link
+                    href="/trade"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2
+                      text-sm font-semibold text-text-inverse
+                      hover:bg-primary-strong transition-colors
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+                    aria-label="Go to trading"
+                  >
+                    <TrendingUp size={15} aria-hidden />
+                    Go to Trading
+                  </Link>
+                </div>
               </>
             )}
           </div>
         </div>
       </section>
 
-      {/* ── Row 2: Available Balance · 24H P&L · Open Positions ──── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" role="list" aria-label="Key metrics">
+      {/* ── Row 2: Available Balance · 24H P&L · Open Positions · Est. Rebate ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" role="list" aria-label="Key metrics">
         <div role="listitem">
           <MetricCard
             label="Available Balance"
@@ -414,6 +448,16 @@ export function OverviewPage() {
                 ? { label: "View Positions", href: "/mypage/history?section=trade&tab=position" }
                 : { label: "Start Trading", href: "#" }
             }
+          />
+        </div>
+        <div role="listitem">
+          <MetricCard
+            label="Est. Rebate"
+            value={perfLoading ? "—" : fmtUsd(perfData?.estRebateUsd)}
+            unit="USDT"
+            valueColor="positive"
+            isLoading={perfLoading}
+            action={{ label: "Rebate History", href: "/mypage/history?section=transaction&tab=transfer" }}
           />
         </div>
       </div>

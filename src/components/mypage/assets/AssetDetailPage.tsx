@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowDownToLine, ArrowLeftRight, TrendingUp } from "lucide-react";
+import { ArrowLeft, ArrowDownToLine, ArrowLeftRight, ArrowUpToLine, TrendingUp, ExternalLink } from "lucide-react";
 import { useAssets } from "@/hooks/useAssets";
 import { formatUsd, formatPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { getWithdrawUrl } from "@/lib/exchangeUrls";
 import { DepositModal } from "./DepositModal";
+import type { FuturesAssetPair } from "@/types/mypage";
 
 interface AssetDetailPageProps {
   exchangeId: string;
@@ -52,7 +54,7 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
     );
   }
 
-  const grandTotal = exchange.fundingTotalUsd + exchange.tradingTotalUsd;
+  const grandTotal = exchange.fundingTotalUsd + (exchange.spotTotalUsd ?? 0) + (exchange.futuresTotalUsd ?? 0);
 
   // M2: connection status indicator
   const statusColor =
@@ -126,20 +128,36 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
             Trade
           </Link>
 
-          {/* Transfer: move funds between Funding ↔ Trading — S2: title */}
+          {/* Transfer — 서비스 내부 (계좌 간 이체) */}
           <Link
             href={`/mypage/history?section=transaction&tab=transfer&exchange=${exchangeId}`}
             className="flex items-center gap-1.5 rounded-md min-h-[44px] px-3 py-2.5
               border border-border-subtle text-sm font-medium text-text-secondary
               hover:border-primary/40 hover:text-text-primary focus-ring transition-colors"
-            title="Move funds between your Funding and Trading accounts"
+            title="Move funds between Funding · Spot · Futures accounts"
             aria-label={`Transfer funds on ${exchange.exchangeName}`}
           >
             <ArrowLeftRight size={15} aria-hidden />
             Transfer
           </Link>
 
-          {/* Deposit: opens platform-internal deposit modal */}
+          {/* Withdraw — 거래소 외부 처리 (external link) */}
+          <a
+            href={getWithdrawUrl(exchangeId)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-md min-h-[44px] px-3 py-2.5
+              border border-border-subtle text-sm font-medium text-text-secondary
+              hover:border-primary/40 hover:text-text-primary focus-ring transition-colors"
+            title={`Withdraw on ${exchange.exchangeName} (opens exchange website)`}
+            aria-label={`Withdraw from ${exchange.exchangeName} — opens exchange website`}
+          >
+            <ArrowUpToLine size={15} aria-hidden />
+            Withdraw
+            <ExternalLink size={11} className="text-text-tertiary" aria-hidden />
+          </a>
+
+          {/* Deposit — 서비스 내부 (primary CTA) */}
           <button
             onClick={() => setDepositOpen(true)}
             className="flex items-center gap-1.5 rounded-md bg-primary min-h-[44px] px-3 py-2.5
@@ -174,12 +192,20 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
         showQuantity={showQuantity}
       />
 
-      {/* ── Trading Account ── */}
+      {/* ── Spot Account ── */}
       <AccountSection
-        title="Trading Account"
-        pairs={exchange.tradingAccount}
-        totalUsd={exchange.tradingTotalUsd}
-        sectionId={`${exchangeId}-trading`}
+        title="Spot Account"
+        pairs={exchange.spotAccount ?? []}
+        totalUsd={exchange.spotTotalUsd ?? 0}
+        sectionId={`${exchangeId}-spot`}
+        showQuantity={showQuantity}
+      />
+
+      {/* ── Futures Account ── */}
+      <FuturesAccountSection
+        pairs={exchange.futuresAccount ?? []}
+        totalUsd={exchange.futuresTotalUsd ?? 0}
+        sectionId={`${exchangeId}-futures`}
         showQuantity={showQuantity}
       />
 
@@ -281,6 +307,112 @@ function AccountSection({ title, pairs, totalUsd, sectionId, showQuantity }: Acc
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ─── FuturesAccountSection ────────────────────────────────────────────────────
+
+interface FuturesAccountSectionProps {
+  pairs: FuturesAssetPair[];
+  totalUsd: number;
+  sectionId: string;
+  showQuantity: boolean;
+}
+
+function FuturesAccountSection({ pairs, totalUsd, sectionId, showQuantity }: FuturesAccountSectionProps) {
+  return (
+    <section aria-labelledby={`${sectionId}-heading`}>
+      <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface-1">
+        {/* Section header */}
+        <div className="flex items-center justify-between border-b border-border-subtle bg-surface-2 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <h2
+              id={`${sectionId}-heading`}
+              className="text-sm font-semibold text-text-primary"
+            >
+              Futures Account
+            </h2>
+            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+              PERP
+            </span>
+          </div>
+          <span className="text-xs text-text-tertiary">
+            Total{" "}
+            <strong className="text-text-secondary">{formatUsd(totalUsd)}</strong>
+          </span>
+        </div>
+
+        {!pairs.length ? (
+          <p className="px-4 py-8 text-center text-sm text-text-secondary">
+            No assets in this account.
+          </p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border-subtle bg-surface-2/30">
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-text-tertiary">
+                  Symbol
+                </th>
+                {showQuantity && (
+                  <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
+                    Quantity
+                  </th>
+                )}
+                <th scope="col" className="px-4 py-2 text-center text-xs font-medium text-text-tertiary">
+                  Margin
+                </th>
+                <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
+                  Unrealized P&L
+                </th>
+                <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-text-tertiary">
+                  Value (USD)
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {pairs.map((pair) => {
+                const pnl = pair.unrealizedPnlUsd;
+                const pnlPositive = pnl !== undefined && pnl >= 0;
+                return (
+                  <tr
+                    key={pair.symbol}
+                    className="border-b border-white/10 transition-colors hover:bg-surface-2/30 last:border-0"
+                  >
+                    <td className="px-4 py-2.5 font-medium text-text-primary">
+                      {pair.symbol}
+                    </td>
+                    {showQuantity && (
+                      <td className="px-4 py-2.5 text-right tabular-nums text-text-secondary">
+                        {pair.quantity}
+                      </td>
+                    )}
+                    <td className="px-4 py-2.5 text-center">
+                      {pair.marginType ? (
+                        <span className="inline-block rounded bg-surface-3 px-1.5 py-0.5 text-[10px] font-semibold text-text-secondary">
+                          {pair.marginType.toUpperCase()}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-text-tertiary">—</span>
+                      )}
+                    </td>
+                    <td className={cn(
+                      "px-4 py-2.5 text-right tabular-nums text-xs font-medium",
+                      pnl === undefined ? "text-text-tertiary" :
+                      pnlPositive ? "text-positive" : "text-negative"
+                    )}>
+                      {pnl !== undefined ? `${pnlPositive ? "+" : ""}${formatUsd(pnl)}` : "—"}
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-text-primary">
+                      {formatUsd(pair.valueUsd)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
