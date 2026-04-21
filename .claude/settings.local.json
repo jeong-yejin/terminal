@@ -13,7 +13,16 @@
       "Bash(/usr/local/bin/node --version)",
       "Read(//Users/umbrellax/.claude/skills/**)",
       "Read(//Users/umbrellax/.claude/.claude/**)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git rm *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(python3 /Users/umbrellax/.claude/skills/ui-ux-pro-max/scripts/search.py \"crypto trading terminal dark dashboard fintech\" --design-system -p \"ReboundX Terminal\" -f markdown)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/trade)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/mypage/overview)",
+      "Bash(pkill -f \"next dev --port 3001\")",
+      "Bash(curl -s http://localhost:3001/mypage/history)",
+      "Read(//dev/**)"
     ]
   }
 }

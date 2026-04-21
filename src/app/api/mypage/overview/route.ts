@@ -3,6 +3,36 @@ import type { OverviewData } from "@/types/mypage";
 
 export async function GET() {
   const data: OverviewData = {
+    openPositions: [
+      {
+        id: "pos-1",
+        exchangeId: "bybit",
+        symbol: "SOLUSD",
+        side: "long",
+        quantity: 666.0,
+        entryPrice: 191.57,
+        marketPrice: 1149.42,
+        liqPrice: 191.57,
+        unrealizedPnlUsd: 1149.42,
+        unrealizedPnlPct: 0.08,
+        unrealizedBaseUsd: 100,
+        realizedPnlUsd: 1149.42,
+      },
+      {
+        id: "pos-2",
+        exchangeId: "binance",
+        symbol: "SOLUSD",
+        side: "long",
+        quantity: 666.0,
+        entryPrice: 191.57,
+        marketPrice: 1149.42,
+        liqPrice: 191.57,
+        unrealizedPnlUsd: 1149.42,
+        unrealizedPnlPct: 0.08,
+        unrealizedBaseUsd: 100,
+        realizedPnlUsd: 1149.42,
+      },
+    ],
     summary: {
       totalAssetUsd: 284_510.42,
       availableBalanceUsd: 91_230.18,

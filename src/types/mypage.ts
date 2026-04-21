@@ -36,11 +36,27 @@ export interface BalanceDataPoint {
   totalUsd: number;
 }
 
+export interface OpenPosition {
+  id: string;
+  exchangeId: ExchangeId;
+  symbol: string;
+  side: PositionSide;
+  quantity: number;
+  entryPrice: number;
+  marketPrice: number;
+  liqPrice: number;
+  unrealizedPnlUsd: number;
+  unrealizedPnlPct: number;
+  unrealizedBaseUsd: number;
+  realizedPnlUsd: number;
+}
+
 export interface OverviewData {
   summary: AssetSummary;
   connectedExchanges: ConnectedExchange[];
   /** 최근 14일 잔고 히스토리 (sparkline용) */
   balanceHistory?: BalanceDataPoint[];
+  openPositions?: OpenPosition[];
 }
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
