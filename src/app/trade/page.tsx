@@ -7,6 +7,7 @@ import { ChartArea } from "@/components/trade/ChartArea";
 import { TradeBottomPanel } from "@/components/trade/TradeBottomPanel";
 import { Orderbook } from "@/components/trade/Orderbook";
 import { OrderForm } from "@/components/trade/OrderForm";
+import { BalancePanel } from "@/components/trade/BalancePanel";
 import { CommunityChat, type SharedPosition } from "@/components/trade/CommunityChat";
 import { EXCHANGES, SYMBOLS, type ExchangeMeta, type SymbolMeta } from "@/components/trade/constants";
 
@@ -41,13 +42,14 @@ export default function TradePage() {
           <TradeBottomPanel onSharePosition={handleSharePosition} />
         </div>
 
-        {/* Orderbook + order form */}
-        <aside className="flex w-72 shrink-0 flex-col border-l border-border-subtle bg-surface-1 xl:w-80">
+        {/* Orderbook + order form + balance */}
+        <aside className="flex w-72 shrink-0 flex-col overflow-hidden border-l border-border-subtle bg-surface-1 xl:w-80">
           <div className="min-h-0 flex-1 overflow-hidden">
             <Orderbook symbol={symbol} />
           </div>
-          <div className="shrink-0 overflow-y-auto">
+          <div className="shrink-0 overflow-y-auto" style={{ maxHeight: "58vh" }}>
             <OrderForm symbol={symbol} />
+            <BalancePanel />
           </div>
         </aside>
 
