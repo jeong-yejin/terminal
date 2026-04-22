@@ -350,22 +350,22 @@ export function TradeBottomPanel({ onSharePosition }: { onSharePosition?: (pos: 
     <div className="flex h-[220px] flex-shrink-0 flex-col border-t border-border-subtle bg-surface-1">
 
       {/* ── Tab bar ─────────────────────────────────────────────────── */}
-      <div className="flex h-10 flex-shrink-0 items-center gap-3 border-b border-border-subtle px-3">
-        {/* Segmented tabs */}
-        <div className="flex items-center gap-0.5 rounded-lg border border-border-subtle bg-surface-2 p-0.5">
+      <div className="flex h-[44px] flex-shrink-0 items-center gap-1.5 border-b border-border-subtle px-2">
+        {/* Individual rounded tab buttons — reference style */}
+        <div className="flex items-center gap-[3px]">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={`flex shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap rounded-md px-3 py-1 text-[11px] font-medium transition-colors ${
+              className={`flex shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap rounded-lg px-3 py-[6px] text-[13px] leading-[1.5] tracking-[0.14px] transition-colors ${
                 activeTab === t.key
-                  ? "bg-surface-3 text-text-primary shadow-sm"
-                  : "text-text-tertiary hover:text-text-secondary"
+                  ? "bg-surface-1 font-bold text-text-primary shadow-[0px_1px_4px_0px_rgba(255,255,255,0.08)]"
+                  : "bg-surface-2 font-normal text-text-tertiary hover:text-text-secondary"
               }`}
             >
               {t.label}
               {t.count !== undefined && (
-                <span className={activeTab === t.key ? "text-primary" : "text-text-disabled"}>
+                <span className={`num-mono text-[12px] ${activeTab === t.key ? "text-primary" : "text-text-disabled"}`}>
                   ({t.count})
                 </span>
               )}
@@ -374,19 +374,19 @@ export function TradeBottomPanel({ onSharePosition }: { onSharePosition?: (pos: 
         </div>
 
         {/* Action buttons */}
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {activeTab === "positions" && (
-            <button className="h-6 rounded border border-border-subtle bg-surface-2 px-2.5 text-[11px] font-medium text-text-secondary transition-colors hover:bg-surface-3 hover:text-text-primary">
+            <button className="cursor-pointer rounded-lg bg-surface-2 px-3 py-[6px] text-[13px] font-medium text-text-secondary transition-colors hover:bg-surface-3 hover:text-text-primary">
               Close All Position
             </button>
           )}
           {activeTab === "open-orders" && (
-            <button className="h-6 rounded border border-border-subtle bg-surface-2 px-2.5 text-[11px] font-medium text-text-secondary transition-colors hover:bg-surface-3 hover:text-text-primary">
+            <button className="cursor-pointer rounded-lg bg-surface-2 px-3 py-[6px] text-[13px] font-medium text-text-secondary transition-colors hover:bg-surface-3 hover:text-text-primary">
               Cancel All Order
             </button>
           )}
-          <button className="flex h-6 w-6 items-center justify-center rounded text-text-disabled transition-colors hover:bg-surface-2 hover:text-text-secondary">
-            <Settings2 size={13} />
+          <button className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-text-disabled transition-colors hover:bg-surface-2 hover:text-text-secondary">
+            <Settings2 size={14} />
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
-/* ─── Font Import ─────────────────────────────────────────────────────────── */
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
+/* ─── Font Imports ─────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -49,76 +49,249 @@
   /* ── Accent ──────────────────────────────────────────────────────────────── */
   /* accent.background-primary (rgba #CAFF5D 10%) */
   --color-accent-bg-primary: rgba(202, 255, 93, 0.10);
+  /* accent.background-green   (rgba #22C55E 10%) */
+  --color-accent-bg-green:   rgba(34, 197, 94, 0.10);
+  /* accent.background-amber   (rgba #F59E0B 10%) */
+  --color-accent-bg-amber:   rgba(245, 158, 11, 0.10);
+  /* accent.background-red     (rgba #EF4444 10%) */
+  --color-accent-bg-red:     rgba(239, 68, 68, 0.10);
+  /* accent.background-blue    (rgba #3B82F6 10%) */
+  --color-accent-bg-blue:    rgba(59, 130, 246, 0.10);
 
   /* ── Interaction ─────────────────────────────────────────────────────────── */
   /* interaction.inactive */ --color-interaction-inactive: 115 115 115; /* #737373 */
   /* interaction.disable  */ --color-interaction-disable:  82 82 82;    /* #525252 */
+
+  /* ── Motion / Spring Physics ─────────────────────────────────────────────── */
+  --spring-out: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-micro: 150ms;
+  --duration-base: 200ms;
+  --duration-spring: 300ms;
+  --duration-reveal: 420ms;
 }
 
 /* ─── Base Styles ──────────────────────────────────────────────────────────── */
 @layer base {
   html {
     font-family: "Manrope", sans-serif;
-    /* 기본 배경/텍스트: dark mode 고정 */
     background-color: rgb(var(--color-bg-base));
     color: rgb(var(--color-label-strong));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply min-h-screen;
+    @apply min-h-[100dvh];
   }
 
-  /* 스크롤바 스타일 (Webkit) */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  /* ── Reduced Motion: collapse all transitions ────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
-  ::-webkit-scrollbar-track {
-    background: rgb(var(--color-surface-1));
-  }
+
+  /* ── Scrollbar ───────────────────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: rgb(var(--color-surface-1)); }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+}
+
+/* ─── Keyframes ────────────────────────────────────────────────────────────── */
+@layer base {
+  /* Scroll-reveal entry */
+  @keyframes reveal-up {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Staggered data rows entering */
+  @keyframes row-in {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Number tick when data arrives */
+  @keyframes num-tick {
+    0%  { opacity: 0; transform: translateY(5px); }
+    60% { opacity: 1; transform: translateY(-1px); }
+    100%{ opacity: 1; transform: translateY(0); }
+  }
+
+  /* Live indicator pulse ring */
+  @keyframes live-ring {
+    0%   { transform: scale(1);   opacity: 0.8; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  /* Skeleton shimmer */
+  @keyframes shimmer {
+    from { background-position: -400px 0; }
+    to   { background-position:  400px 0; }
+  }
+
+  /* Donut segment draw-in */
+  @keyframes donut-draw {
+    from { stroke-dashoffset: var(--circ, 415); }
+    to   { stroke-dashoffset: var(--offset, 0); }
+  }
+
+  /* Chart line trace */
+  @keyframes line-trace {
+    from { stroke-dashoffset: 1000; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  /* Scan line (purely decorative — fixed pseudo-element) */
+  @keyframes scan-sweep {
+    from { transform: translateY(-100%); }
+    to   { transform: translateY(100%); }
   }
 }
 
 /* ─── Component Utilities ──────────────────────────────────────────────────── */
 @layer utilities {
-  /* 카드 기본 스타일 */
+  /* ── Card ────────────────────────────────────────────────────────────────── */
   .card {
-    @apply rounded-xl border border-border-subtle bg-surface-1 p-5;
+    @apply rounded-2xl border border-border-subtle bg-surface-1;
+    transition: transform var(--duration-base) var(--ease-out-smooth),
+                box-shadow var(--duration-base) var(--ease-out-smooth);
+  }
+  .card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(202, 255, 93, 0.12);
   }
 
-  /* 포커스 링 공통 */
+  /* ── Magnetic card (JS-driven, see component) ────────────────────────────── */
+  .magnetic-card {
+    will-change: transform;
+    transition: transform var(--duration-base) var(--ease-out-smooth),
+                box-shadow var(--duration-base) var(--ease-out-smooth);
+  }
+  .magnetic-card:hover {
+    box-shadow: 0 0 0 1px rgba(202, 255, 93, 0.15);
+  }
+
+  /* ── Focus ring ──────────────────────────────────────────────────────────── */
   .focus-ring {
     @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
   }
 
-  /* 텍스트 타입 유틸 */
+  /* ── Monospace financial data ────────────────────────────────────────────── */
+  .num-mono {
+    font-family: "JetBrains Mono", "Courier New", monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Scroll-reveal base state ────────────────────────────────────────────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition:
+      opacity    var(--duration-reveal) var(--ease-out-smooth),
+      transform  var(--duration-reveal) var(--ease-out-smooth);
+    transition-delay: calc(var(--stagger, 0) * 60ms);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Live indicator ──────────────────────────────────────────────────────── */
+  .live-dot {
+    @apply relative inline-flex h-2 w-2;
+  }
+  .live-dot::before {
+    content: "";
+    @apply absolute inset-0 rounded-full bg-primary;
+    animation: live-ring 1.6s var(--ease-out-smooth) infinite;
+  }
+  .live-dot::after {
+    content: "";
+    @apply absolute inset-0 rounded-full bg-primary;
+  }
+
+  /* ── Skeleton shimmer ────────────────────────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--color-surface-2)) 25%,
+      rgb(var(--color-surface-3)) 50%,
+      rgb(var(--color-surface-2)) 75%
+    );
+    background-size: 800px 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+    @apply rounded;
+  }
+
+  /* ── Dense row (table rows with tight rhythm) ────────────────────────────── */
+  .dense-row {
+    animation: row-in 280ms var(--ease-out-smooth) both;
+    animation-delay: calc(var(--row-index, 0) * 40ms);
+  }
+
+  /* ── Number tick (data arrival) ──────────────────────────────────────────── */
+  .num-tick {
+    animation: num-tick 280ms var(--spring-out) both;
+  }
+
+  /* ── Typography utilities ────────────────────────────────────────────────── */
   .text-display-h5 {
     font-size: 24px;
     line-height: 120%;
     letter-spacing: -0.02em;
   }
-  .text-body-3 {
-    font-size: 16px;
-    line-height: 150%;
+  .text-body-3  { font-size: 16px; line-height: 150%; }
+  .text-label-1 { font-size: 14px; line-height: 140%; }
+  .text-label-2 { font-size: 13px; line-height: 140%; }
+  .text-caption { font-size: 12px; line-height: 140%; }
+
+  /* ── Period selector pill ────────────────────────────────────────────────── */
+  .period-pill {
+    @apply cursor-pointer rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-all;
+    transition-duration: var(--duration-micro);
+    transition-timing-function: var(--ease-snap);
   }
-  .text-label-1 {
-    font-size: 14px;
-    line-height: 140%;
+  .period-pill.active {
+    @apply bg-surface-3 text-text-primary;
   }
-  .text-label-2 {
-    font-size: 13px;
-    line-height: 140%;
+  .period-pill:not(.active) {
+    @apply text-text-tertiary hover:text-text-secondary;
   }
-  .text-caption {
-    font-size: 12px;
-    line-height: 140%;
+
+  /* ── Ghost divider line ──────────────────────────────────────────────────── */
+  .divider-ghost {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* ── Accent ghost border on hover ────────────────────────────────────────── */
+  .hover-lime-ring:hover {
+    box-shadow: 0 0 0 1px rgba(202, 255, 93, 0.18);
+    transition: box-shadow var(--duration-base) var(--ease-out-smooth);
+  }
+
+  /* ── Status badge ────────────────────────────────────────────────────────── */
+  .badge-connected {
+    @apply inline-flex items-center rounded-full bg-positive/10 px-2.5 py-0.5 text-xs font-semibold text-positive;
+  }
+  .badge-disconnected {
+    @apply inline-flex items-center rounded-full bg-cautionary/10 px-2.5 py-0.5 text-xs font-semibold text-cautionary;
+  }
+
+  /* ── Chart area gradient helper ──────────────────────────────────────────── */
+  .chart-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: line-trace 1.2s var(--ease-out-smooth) forwards;
+    animation-delay: 200ms;
   }
 }

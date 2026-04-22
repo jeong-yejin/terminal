@@ -118,10 +118,10 @@
 | 토큰 | 값 | 용도 |
 |------|-----|------|
 | `accent/background-primary` | `rgba(202, 255, 93, 0.10)` | Primary 색상 틴트 배경 |
-| `accent/background-green` | `#F0FDF4` | 긍정 상태 배경 |
-| `accent/background-amber` | `#FFFBEB` | 경고 상태 배경 |
-| `accent/background-red` | `#FEF2F2` | 에러 상태 배경 |
-| `accent/background-blue` | `#EFF6FF` | 정보 상태 배경 |
+| `accent/background-green` | `rgba(34, 197, 94, 0.10)` | 긍정 상태 배경 |
+| `accent/background-amber` | `rgba(245, 158, 11, 0.10)` | 경고 상태 배경 |
+| `accent/background-red` | `rgba(239, 68, 68, 0.10)` | 에러 상태 배경 |
+| `accent/background-blue` | `rgba(59, 130, 246, 0.10)` | 정보 상태 배경 |
 | `accent/foreground-primary` | `#B3E84E` | Primary 틴트 전경 |
 | `accent/foreground-green` | `#22C55E` | 긍정 전경 |
 | `accent/foreground-amber` | `#F59E0B` | 경고 전경 |
@@ -613,5 +613,9 @@
 
   /* Accent */
   --color-accent-bg-primary: rgba(202, 255, 93, 0.10);
+  --color-accent-bg-green:   rgba(34, 197, 94, 0.10);
+  --color-accent-bg-amber:   rgba(245, 158, 11, 0.10);
+  --color-accent-bg-red:     rgba(239, 68, 68, 0.10);
+  --color-accent-bg-blue:    rgba(59, 130, 246, 0.10);
 }
 ```

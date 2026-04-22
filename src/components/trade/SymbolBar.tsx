@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, ArrowUp, ArrowDown } from "lucide-react";
 import { SYMBOLS, EXCHANGES, type SymbolMeta, type ExchangeKey, type ExchangeMeta } from "./constants";
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ function ExchangeDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border-subtle bg-surface-2 px-3 py-1.5 text-xs font-semibold text-text-primary transition-colors hover:border-border-normal focus-ring"
+        className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-surface-2 px-3 py-[6px] text-[13px] font-bold text-text-primary transition-colors hover:bg-surface-3 focus-ring"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -55,7 +55,7 @@ function ExchangeDropdown({
       {open && (
         <ul
           role="listbox"
-          className="absolute left-0 top-full z-50 mt-1 min-w-[120px] overflow-hidden rounded-xl border border-border-subtle bg-surface-2 py-1 shadow-xl"
+          className="absolute left-0 top-full z-50 mt-1 min-w-[130px] overflow-hidden rounded-xl border border-border-subtle bg-surface-2 py-1 shadow-xl"
         >
           {EXCHANGES.map((ex) => (
             <li key={ex.id}>
@@ -63,7 +63,7 @@ function ExchangeDropdown({
                 role="option"
                 aria-selected={ex.id === value.id}
                 onClick={() => { onChange(ex); setOpen(false); }}
-                className={`flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors hover:bg-surface-3 ${
+                className={`flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors hover:bg-surface-3 ${
                   ex.id === value.id ? "text-text-primary" : "text-text-secondary"
                 }`}
               >
@@ -105,7 +105,7 @@ function SymbolDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border-subtle bg-surface-2 px-3 py-1.5 text-sm font-bold text-text-primary transition-colors hover:border-border-normal focus-ring"
+        className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-surface-2 px-3 py-[6px] text-[16px] font-bold text-text-primary transition-colors hover:bg-surface-3 focus-ring"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -114,9 +114,7 @@ function SymbolDropdown({
       </button>
 
       {open && (
-        <div
-          className="absolute left-0 top-full z-50 mt-1 w-56 rounded-xl border border-border-subtle bg-surface-2 shadow-xl"
-        >
+        <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-xl border border-border-subtle bg-surface-2 shadow-xl">
           <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2">
             <Search size={12} className="text-text-tertiary" />
             <input
@@ -124,7 +122,7 @@ function SymbolDropdown({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search symbol…"
-              className="flex-1 bg-transparent text-xs text-text-primary outline-none placeholder:text-text-disabled"
+              className="flex-1 bg-transparent text-[12px] text-text-primary outline-none placeholder:text-text-disabled"
             />
           </div>
           <ul role="listbox" className="max-h-52 overflow-y-auto py-1">
@@ -136,7 +134,7 @@ function SymbolDropdown({
                     role="option"
                     aria-selected={s.tv === value.tv}
                     onClick={() => { onChange(s); setOpen(false); setQuery(""); }}
-                    className={`flex w-full cursor-pointer items-center justify-between px-3 py-2 text-xs transition-colors hover:bg-surface-3 ${
+                    className={`flex w-full cursor-pointer items-center justify-between px-3 py-2 text-[12px] transition-colors hover:bg-surface-3 ${
                       s.tv === value.tv ? "text-text-primary" : "text-text-secondary"
                     }`}
                   >
@@ -159,9 +157,9 @@ function SymbolDropdown({
 
 function StatItem({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] text-text-disabled">{label}</span>
-      <span className={`text-[12px] font-medium tabular-nums ${valueClass ?? "text-text-secondary"}`}>
+    <div className="flex flex-col gap-[4px]">
+      <span className="num-mono text-[11px] leading-[1.5] tracking-[0.165px] text-text-disabled">{label}</span>
+      <span className={`num-mono text-[13px] font-bold leading-[1.5] tracking-[0.195px] ${valueClass ?? "text-text-secondary"}`}>
         {value}
       </span>
     </div>
@@ -179,49 +177,56 @@ export interface SymbolBarState {
 
 export function SymbolBar({ exchange, symbol, onExchangeChange, onSymbolChange }: SymbolBarState) {
   const isPositive = symbol.change24h >= 0;
-  const decimals = symbol.price < 1 ? 6 : symbol.price < 10 ? 4 : 2;
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border-subtle bg-surface-1 px-4 py-2.5">
-      {/* Selectors */}
+    <div className="flex flex-shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b border-border-subtle bg-surface-1 px-5 py-2">
+
+      {/* ── Exchange + Symbol selectors ── */}
       <div className="flex items-center gap-2">
         <ExchangeDropdown value={exchange} onChange={onExchangeChange} />
+
+        {/* vertical divider */}
+        <span className="h-4 w-px bg-border-subtle" aria-hidden="true" />
+
         <SymbolDropdown value={symbol} onChange={onSymbolChange} />
+
+        {/* Perp badge */}
+        <span className="rounded-md border border-border-subtle bg-surface-2 px-2 py-[3px] text-[12px] font-bold text-text-secondary">
+          Perp
+        </span>
       </div>
 
-      {/* Price + change */}
-      <div className="flex items-baseline gap-2">
-        <span
-          className={`text-xl font-bold tabular-nums ${
-            isPositive ? "text-positive" : "text-negative"
-          }`}
-        >
+      {/* ── Price + change ── */}
+      <div className="flex items-center gap-2.5">
+        <span className={`num-mono text-[18px] font-bold leading-none ${isPositive ? "text-positive" : "text-negative"}`}>
           {fmtPrice(symbol.price)}
         </span>
         <span
-          className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
+          className={`flex items-center gap-1 rounded-lg border px-2 py-[3px] num-mono text-[12px] font-bold ${
             isPositive
-              ? "bg-positive/10 text-positive"
-              : "bg-negative/10 text-negative"
+              ? "border-positive/50 bg-positive/10 text-positive"
+              : "border-negative/50 bg-negative/10 text-negative"
           }`}
         >
+          {isPositive ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
           {isPositive ? "+" : ""}{symbol.change24h.toFixed(2)}%
         </span>
       </div>
 
-      {/* divider */}
+      {/* ── Divider ── */}
       <span className="hidden h-6 w-px bg-border-subtle md:block" aria-hidden="true" />
 
-      {/* Stats */}
-      <div className="flex flex-wrap items-center gap-4">
-        <StatItem label="24H High" value={fmtPrice(symbol.high24h)} valueClass="text-positive" />
-        <StatItem label="24H Low"  value={fmtPrice(symbol.low24h)}  valueClass="text-negative" />
-        <StatItem label="24H Vol"  value={fmtVol(symbol.vol24h)} />
+      {/* ── Stats ── */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+        <StatItem label="24H High"       value={fmtPrice(symbol.high24h)} valueClass="text-positive" />
+        <StatItem label="24H Low"        value={fmtPrice(symbol.low24h)}  valueClass="text-negative" />
+        <StatItem label="24H Vol(USDT)"  value={fmtVol(symbol.vol24h)} />
         <StatItem
-          label="Funding"
-          value={`${symbol.fundingRate.toFixed(4)}%`}
-          valueClass={symbol.fundingRate >= 0 ? "text-positive" : "text-negative"}
+          label="Funding Rate"
+          value={`${symbol.fundingRate >= 0 ? "+" : ""}${symbol.fundingRate.toFixed(4)}%`}
+          valueClass={symbol.fundingRate >= 0 ? "text-primary" : "text-negative"}
         />
+        <StatItem label="Fee" value="0.06%" />
       </div>
     </div>
   );
