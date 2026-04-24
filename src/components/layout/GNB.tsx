@@ -18,26 +18,109 @@ function ReboundXMark({ size = 20 }: { size?: number }) {
   );
 }
 
+// ─── Level helpers (mirrors CommunityChat getLevelStyle) ──────────────────────
+
+function getLevelColor(level: number): string {
+  if (level >= 91) return "#FBBF24"; // amber  – Legend
+  if (level >= 61) return "#A855F7"; // purple – Elite
+  if (level >= 31) return "#60A5FA"; // blue   – Pro
+  if (level >= 11) return "#22C55E"; // green  – Expert
+  return "#737373";                  // gray   – Trader
+}
+
+function getLevelName(level: number): string {
+  if (level >= 91) return "Legend";
+  if (level >= 61) return "Elite";
+  if (level >= 31) return "Pro";
+  if (level >= 11) return "Expert";
+  return "Trader";
+}
+
+// ─── Rebate Chip ─────────────────────────────────────────────────────────────
+
+function RebateChip({ amount }: { amount: number }) {
+  return (
+    <Link
+      href="/mypage/performance"
+      className="hidden items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/20 focus-ring sm:flex"
+      title="Today's earned rebate — click to view performance"
+    >
+      {/* pulsing live dot */}
+      <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+      </span>
+      Today +${amount.toFixed(2)}
+    </Link>
+  );
+}
+
+// ─── Level Avatar with XP progress ring ──────────────────────────────────────
+
+function LevelAvatar({
+  level,
+  xp,
+  xpForNext,
+}: {
+  level: number;
+  xp: number;
+  xpForNext: number;
+}) {
+  const color = getLevelColor(level);
+  const pct   = Math.min(100, Math.round((xp / xpForNext) * 100));
+
+  return (
+    <Link
+      href="/mypage/overview"
+      title={`Lv.${level} ${getLevelName(level)} — ${xp.toLocaleString()}/${xpForNext.toLocaleString()} XP`}
+      className="group relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full focus-ring"
+      aria-label="My page"
+    >
+      {/* XP conic ring */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `conic-gradient(${color} ${pct}%, rgba(255,255,255,0.07) 0)`,
+          padding: "2px",
+        }}
+      >
+        <div
+          className="flex h-full w-full items-center justify-center rounded-full bg-surface-1 text-[11px] font-extrabold transition-colors group-hover:bg-surface-2"
+          style={{ color }}
+        >
+          {level}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 // ─── Nav links ────────────────────────────────────────────────────────────────
 
 const NAV_LINKS = [
   { href: "/trade",        label: "Trade" },
+  { href: "/community",    label: "Community" },
   { href: "/funding-rate", label: "Funding Rate" },
   { href: "/guide",        label: "Guide" },
 ] as const;
+
+// ─── Mock stats — replace with real user API data ─────────────────────────────
+const MOCK_REBATE_TODAY = 12.40;
+const MOCK_LEVEL        = 15;
+const MOCK_XP           = 1240;
+const MOCK_XP_NEXT      = 1500;
 
 // ─── GNB ─────────────────────────────────────────────────────────────────────
 
 export function GNB() {
   const pathname = usePathname();
-  const { data: user } = useUser();
-  const initial = user?.name?.trim()[0]?.toUpperCase() ?? "U";
+  useUser(); // keep hook active for future user data
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 border-b border-border-subtle bg-surface-1/95 backdrop-blur-md">
       <div className="flex h-full items-center gap-4 px-4 md:px-5">
 
-        {/* ── Left: Logo + Terminal badge ─────────────────────────────────── */}
+        {/* ── Logo + badge ─────────────────────────────────────────────── */}
         <Link
           href="/"
           className="flex flex-shrink-0 items-center gap-2 focus-ring rounded-sm"
@@ -49,15 +132,13 @@ export function GNB() {
           </span>
         </Link>
 
-        {/* Terminal badge */}
         <span className="hidden flex-shrink-0 rounded-full border border-border-subtle bg-surface-2 px-3 py-1 text-xs font-semibold text-text-primary sm:block">
           Terminal
         </span>
 
-        {/* vertical divider */}
         <span className="hidden h-4 w-px flex-shrink-0 bg-border-subtle sm:block" aria-hidden="true" />
 
-        {/* ── Center: Navigation ──────────────────────────────────────────── */}
+        {/* ── Nav ─────────────────────────────────────────────────────── */}
         <nav className="hidden flex-1 items-center gap-1 md:flex" aria-label="Main navigation">
           {NAV_LINKS.map(({ href, label }) => {
             const isActive = pathname === href || pathname.startsWith(href + "/");
@@ -82,13 +163,17 @@ export function GNB() {
           })}
         </nav>
 
-        {/* spacer when nav is hidden */}
         <div className="flex-1 md:hidden" />
 
-        {/* ── Right: Actions ──────────────────────────────────────────────── */}
+        {/* ── Right actions ────────────────────────────────────────────── */}
         <div className="flex flex-shrink-0 items-center gap-2">
 
-          {/* Deposit button */}
+          {/* Live rebate chip */}
+          <RebateChip amount={MOCK_REBATE_TODAY} />
+
+          <span className="hidden h-4 w-px bg-border-subtle sm:block" aria-hidden="true" />
+
+          {/* Deposit */}
           <Link
             href="/mypage/history?section=transaction&tab=deposit"
             className="hidden items-center gap-1 rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-text-inverse
@@ -100,22 +185,14 @@ export function GNB() {
             </svg>
           </Link>
 
-          {/* vertical divider */}
           <span className="hidden h-4 w-px bg-border-subtle sm:block" aria-hidden="true" />
 
-          {/* Avatar */}
-          <Link
-            href="/mypage/overview"
-            className="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-info/20 text-xs font-bold text-info transition-colors hover:bg-info/30 focus-ring"
-            aria-label="My page"
-          >
-            {initial}
-          </Link>
+          {/* Level avatar with XP ring */}
+          <LevelAvatar level={MOCK_LEVEL} xp={MOCK_XP} xpForNext={MOCK_XP_NEXT} />
 
-          {/* vertical divider */}
           <span className="hidden h-4 w-px bg-border-subtle md:block" aria-hidden="true" />
 
-          {/* Language selector */}
+          {/* Language */}
           <button
             className="hidden cursor-pointer items-center gap-1.5 rounded-full border border-border-subtle px-3 py-1.5 text-xs
               font-medium text-text-secondary transition-colors hover:border-border-normal hover:text-text-primary focus-ring md:flex"

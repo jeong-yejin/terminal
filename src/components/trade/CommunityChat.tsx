@@ -11,7 +11,7 @@ type LbPeriod = "all" | "weekly" | "monthly";
 
 const EMOJI_REACTIONS = [
   { key: "🚀", label: "Bullish" },
-  { key: "🐻", label: "Bearish" },
+  { key: "💀", label: "Bearish" },
   { key: "🔥", label: "Hot" },
   { key: "💎", label: "Diamond" },
   { key: "👀", label: "Watch" },
@@ -85,7 +85,7 @@ const SPAM_WINDOW_MS       = 5000;
 const SPAM_MAX_REPEAT      = 3;
 const COOLDOWN_MS          = 30000;
 
-const REPORT_CATEGORIES = ["스팸", "허위 정보", "기타"] as const;
+const REPORT_CATEGORIES = ["Spam", "False Info", "Other"] as const;
 type ReportCategory = (typeof REPORT_CATEGORIES)[number];
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -114,18 +114,18 @@ const LEADERBOARD_DATA: LeaderboardEntry[] = [
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   { id: "m1", userId: "u3", nickname: "BTCmaxi",      level: 91, isReferral: false, content: "BTC holding 94k support nicely. Bulls in control", timestamp: new Date(Date.now() - 8*60000), reactions: { "🚀": ["u1","u2"] }, likes: ["u1","u4","u5"], type: "text", channel: "global" },
-  { id: "m2", userId: "u1", nickname: "CryptoWhale88",level: 72, isReferral: false, content: "솔라나 120까지 빠질 수도 있음. 조심하세요",           timestamp: new Date(Date.now() - 7*60000), reactions: { "🐻": ["u3"] },       likes: [],              type: "text", channel: "korean" },
+  { id: "m2", userId: "u1", nickname: "CryptoWhale88",level: 72, isReferral: false, content: "SOL could drop to 120. Be careful.",                 timestamp: new Date(Date.now() - 7*60000), reactions: { "💀": ["u3"] },       likes: [],              type: "text", channel: "korean" },
   { id: "m3", userId: "u2", nickname: "SolanaKing",   level: 45, isReferral: true,  content: "ETH breakout incoming. Load the bags.",              timestamp: new Date(Date.now() - 5*60000), reactions: { "💎": ["u1","u3","u4"]}, likes: ["u1"],          type: "text", channel: "global" },
   { id: "m4", userId: "u2", nickname: "SolanaKing",   level: 45, isReferral: true,  content: "",                                                   timestamp: new Date(Date.now() - 3*60000), reactions: { "🚀": ["u1","u3"], "💎": ["u4"] }, likes: ["u1","u3","u5"], type: "position", channel: "global", positionCard: { symbol: "ETHUSD", side: "Long", leverage: 10, entryPrice: 3200, currentPrice: 3350, unrealizedPnl: 468.75, unrealizedPct: 4.69 } },
-  { id: "m5", userId: "u4", nickname: "TradeGuru_KR", level: 33, isReferral: true,  content: "비트 95k 돌파하면 10만달러 간다고 봅니다",             timestamp: new Date(Date.now() - 2*60000), reactions: {},                   likes: [],              type: "text", channel: "korean" },
+  { id: "m5", userId: "u4", nickname: "TradeGuru_KR", level: 33, isReferral: true,  content: "If BTC breaks 95k I think we hit 100k.",             timestamp: new Date(Date.now() - 2*60000), reactions: {},                   likes: [],              type: "text", channel: "korean" },
   { id: "m6", userId: "u5", nickname: "DiaHands",     level:  8, isReferral: false, content: "Just entered my first BTC position! Excited",        timestamp: new Date(Date.now() -   60000), reactions: { "👀": ["u1"] },      likes: ["u2"],          type: "text", channel: "global" },
 ];
 
 const MOCK_INCOMING = [
   { userId: "u1", nickname: "CryptoWhale88", level: 72, isReferral: false, content: "Watching BTC closely at 94k resistance", channel: "global" as Channel },
-  { userId: "u4", nickname: "TradeGuru_KR",  level: 33, isReferral: true,  content: "ETH 3400 지지 확인. 롱 들어갑니다",        channel: "korean" as Channel },
+  { userId: "u4", nickname: "TradeGuru_KR",  level: 33, isReferral: true,  content: "ETH 3400 support confirmed. Going long.",  channel: "korean" as Channel },
   { userId: "u3", nickname: "BTCmaxi",       level: 91, isReferral: false, content: "Volume picking up. This is it!",           channel: "global" as Channel },
-  { userId: "u5", nickname: "DiaHands",      level:  8, isReferral: false, content: "새벽에 무슨 급등이에요",                     channel: "korean" as Channel },
+  { userId: "u5", nickname: "DiaHands",      level:  8, isReferral: false, content: "What is this pump in the middle of the night lol", channel: "korean" as Channel },
   { userId: "u2", nickname: "SolanaKing",    level: 45, isReferral: true,  content: "SOL looking strong above 160",             channel: "global" as Channel },
 ];
 
@@ -259,8 +259,8 @@ function ReportModal({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col items-center gap-2 rounded-xl border border-border-subtle bg-surface-2 px-6 py-5 text-center shadow-2xl">
           <AlertCircle size={20} className="text-primary" />
           <p className="text-[12px] leading-relaxed text-text-secondary">
-            신고가 접수되었습니다.<br />
-            <span className="text-text-disabled">누적 신고 시 활동이 제한될 수 있습니다.</span>
+            Report submitted.<br />
+            <span className="text-text-disabled">Repeated reports may restrict your activity.</span>
           </p>
         </div>
       </div>
@@ -271,7 +271,7 @@ function ReportModal({ onClose }: { onClose: () => void }) {
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
       <div className="w-56 rounded-xl border border-border-subtle bg-surface-2 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
-          <span className="text-[12px] font-semibold text-text-primary">신고</span>
+          <span className="text-[12px] font-semibold text-text-primary">Report</span>
           <button onClick={onClose} className="text-text-disabled hover:text-text-secondary"><X size={14} /></button>
         </div>
         <div className="flex flex-col gap-1 p-3">
@@ -280,13 +280,13 @@ function ReportModal({ onClose }: { onClose: () => void }) {
               className={`rounded-lg px-3 py-2 text-left text-[12px] transition-colors ${selected === cat ? "bg-primary/20 text-primary" : "text-text-secondary hover:bg-surface-3"}`}
             >{cat}</button>
           ))}
-          {selected === "기타" && (
+          {selected === "Other" && (
             <textarea className="mt-1 h-16 w-full resize-none rounded-lg bg-surface-3 px-2.5 py-2 text-[11px] text-text-primary placeholder:text-text-disabled focus:outline-none"
-              placeholder="사유를 입력하세요..." value={other} onChange={(e) => setOther(e.target.value)} />
+              placeholder="Enter reason..." value={other} onChange={(e) => setOther(e.target.value)} />
           )}
           <button onClick={submit} disabled={!selected}
             className="mt-1 rounded-lg bg-primary py-1.5 text-[12px] font-semibold text-black transition-opacity disabled:opacity-40">
-            신고하기
+            Submit Report
           </button>
         </div>
       </div>
@@ -703,7 +703,7 @@ export function CommunityChat({
           <div className="shrink-0 border-t border-border-subtle bg-surface-1 p-2">
             {isBlocked ? (
               <div className="rounded-lg bg-cautionary/10 px-3 py-2.5 text-center text-[11px] text-cautionary">
-                {cooldownUntil && Date.now() < cooldownUntil ? `쿨다운 ${cooldownLeft}초 남음` : "메시지 제한. 잠시 후 다시 시도하세요."}
+                {cooldownUntil && Date.now() < cooldownUntil ? `Cooldown: ${cooldownLeft}s remaining` : "Message limit reached. Try again shortly."}
               </div>
             ) : (
               <>
@@ -711,7 +711,7 @@ export function CommunityChat({
                   <textarea value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    placeholder={`#${channel === "global" ? "global" : "한국어"} 에 입력...`}
+                    placeholder={`Message #${channel === "global" ? "global" : "KR"}...`}
                     maxLength={MAX_CHARS} rows={2}
                     className="w-full resize-none rounded-lg border border-border-subtle bg-surface-2 px-3 py-2 pr-8 text-[12px] text-text-primary placeholder:text-text-disabled focus:border-primary/50 focus:outline-none" />
                   <button onClick={handleSend} disabled={!input.trim() || input.length > MAX_CHARS}

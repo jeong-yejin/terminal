@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Search, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronDown, Search, ArrowUp, ArrowDown, TrendingUp } from "lucide-react";
 import { SYMBOLS, EXCHANGES, type SymbolMeta, type ExchangeKey, type ExchangeMeta } from "./constants";
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
@@ -153,7 +153,7 @@ function SymbolDropdown({
   );
 }
 
-// ─── StatItem ─────────────────────────────────────────────────────────────────
+// ─── Stat items ───────────────────────────────────────────────────────────────
 
 function StatItem({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
@@ -162,6 +162,58 @@ function StatItem({ label, value, valueClass }: { label: string; value: string; 
       <span className={`num-mono text-[13px] font-bold leading-[1.5] tracking-[0.195px] ${valueClass ?? "text-text-secondary"}`}>
         {value}
       </span>
+    </div>
+  );
+}
+
+// ─── Effective Fee item — highlights ReboundX rebate advantage ───────────────
+
+function EffectiveFeeItem() {
+  return (
+    <div className="flex flex-col gap-[4px]">
+      <span className="num-mono text-[11px] leading-[1.5] tracking-[0.165px] text-text-disabled">
+        Effective Fee
+      </span>
+      <div className="flex items-baseline gap-1.5">
+        <span className="num-mono text-[13px] font-bold leading-[1.5] tracking-[0.195px] text-primary">
+          0.02%
+        </span>
+        <span className="num-mono text-[10px] text-text-disabled line-through">
+          0.06%
+        </span>
+        <span className="rounded bg-primary/15 px-1 py-px text-[9px] font-bold text-primary">
+          -66%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Community Sentiment Strip ────────────────────────────────────────────────
+
+function SentimentStrip({ symbol }: { symbol: SymbolMeta }) {
+  // Mock sentiment data — replace with real API
+  const bullPct  = 68;
+  const bearPct  = 100 - bullPct;
+  const active   = 47;
+  const base     = symbol.label.split("/")[0] ?? symbol.label;
+
+  return (
+    <div className="flex items-center gap-3 border-t border-border-ghost px-5 py-1.5">
+      <TrendingUp size={11} className="flex-shrink-0 text-text-disabled" aria-hidden />
+      <span className="text-[11px] text-text-disabled">
+        Community on {base}
+      </span>
+      <div className="flex items-center gap-1 text-[11px]">
+        <span>🚀</span>
+        <span className="font-bold text-positive">{bullPct}%</span>
+      </div>
+      <span className="text-text-disabled" aria-hidden>·</span>
+      <div className="flex items-center gap-1 text-[11px]">
+        <span>💀</span>
+        <span className="font-bold text-negative">{bearPct}%</span>
+      </div>
+      <span className="text-[11px] text-text-disabled">{active} active traders</span>
     </div>
   );
 }
@@ -179,55 +231,57 @@ export function SymbolBar({ exchange, symbol, onExchangeChange, onSymbolChange }
   const isPositive = symbol.change24h >= 0;
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b border-border-subtle bg-surface-1 px-5 py-2">
+    <div className="flex flex-shrink-0 flex-col border-b border-border-subtle bg-surface-1">
 
-      {/* ── Exchange + Symbol selectors ── */}
-      <div className="flex items-center gap-2">
-        <ExchangeDropdown value={exchange} onChange={onExchangeChange} />
+      {/* ── Main row ── */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-5 py-2">
 
-        {/* vertical divider */}
-        <span className="h-4 w-px bg-border-subtle" aria-hidden="true" />
+        {/* Exchange + Symbol selectors */}
+        <div className="flex items-center gap-2">
+          <ExchangeDropdown value={exchange} onChange={onExchangeChange} />
+          <span className="h-4 w-px bg-border-subtle" aria-hidden="true" />
+          <SymbolDropdown value={symbol} onChange={onSymbolChange} />
+          <span className="rounded-md border border-border-subtle bg-surface-2 px-2 py-[3px] text-[12px] font-bold text-text-secondary">
+            Perp
+          </span>
+        </div>
 
-        <SymbolDropdown value={symbol} onChange={onSymbolChange} />
+        {/* Price + change */}
+        <div className="flex items-center gap-2.5">
+          <span className={`num-mono text-[18px] font-bold leading-none ${isPositive ? "text-positive" : "text-negative"}`}>
+            {fmtPrice(symbol.price)}
+          </span>
+          <span
+            className={`flex items-center gap-1 rounded-lg border px-2 py-[3px] num-mono text-[12px] font-bold ${
+              isPositive
+                ? "border-positive/50 bg-positive/10 text-positive"
+                : "border-negative/50 bg-negative/10 text-negative"
+            }`}
+          >
+            {isPositive ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
+            {isPositive ? "+" : ""}{symbol.change24h.toFixed(2)}%
+          </span>
+        </div>
 
-        {/* Perp badge */}
-        <span className="rounded-md border border-border-subtle bg-surface-2 px-2 py-[3px] text-[12px] font-bold text-text-secondary">
-          Perp
-        </span>
+        <span className="hidden h-6 w-px bg-border-subtle md:block" aria-hidden="true" />
+
+        {/* Stats */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+          <StatItem label="24H High"      value={fmtPrice(symbol.high24h)} valueClass="text-positive" />
+          <StatItem label="24H Low"       value={fmtPrice(symbol.low24h)}  valueClass="text-negative" />
+          <StatItem label="24H Vol(USDT)" value={fmtVol(symbol.vol24h)} />
+          <StatItem
+            label="Funding Rate"
+            value={`${symbol.fundingRate >= 0 ? "+" : ""}${symbol.fundingRate.toFixed(4)}%`}
+            valueClass={symbol.fundingRate >= 0 ? "text-primary" : "text-negative"}
+          />
+          {/* Effective fee — replaces generic "Fee: 0.06%" with rebate-aware display */}
+          <EffectiveFeeItem />
+        </div>
       </div>
 
-      {/* ── Price + change ── */}
-      <div className="flex items-center gap-2.5">
-        <span className={`num-mono text-[18px] font-bold leading-none ${isPositive ? "text-positive" : "text-negative"}`}>
-          {fmtPrice(symbol.price)}
-        </span>
-        <span
-          className={`flex items-center gap-1 rounded-lg border px-2 py-[3px] num-mono text-[12px] font-bold ${
-            isPositive
-              ? "border-positive/50 bg-positive/10 text-positive"
-              : "border-negative/50 bg-negative/10 text-negative"
-          }`}
-        >
-          {isPositive ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
-          {isPositive ? "+" : ""}{symbol.change24h.toFixed(2)}%
-        </span>
-      </div>
-
-      {/* ── Divider ── */}
-      <span className="hidden h-6 w-px bg-border-subtle md:block" aria-hidden="true" />
-
-      {/* ── Stats ── */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-        <StatItem label="24H High"       value={fmtPrice(symbol.high24h)} valueClass="text-positive" />
-        <StatItem label="24H Low"        value={fmtPrice(symbol.low24h)}  valueClass="text-negative" />
-        <StatItem label="24H Vol(USDT)"  value={fmtVol(symbol.vol24h)} />
-        <StatItem
-          label="Funding Rate"
-          value={`${symbol.fundingRate >= 0 ? "+" : ""}${symbol.fundingRate.toFixed(4)}%`}
-          valueClass={symbol.fundingRate >= 0 ? "text-primary" : "text-negative"}
-        />
-        <StatItem label="Fee" value="0.06%" />
-      </div>
+      {/* ── Community sentiment strip ── */}
+      <SentimentStrip symbol={symbol} />
     </div>
   );
 }
