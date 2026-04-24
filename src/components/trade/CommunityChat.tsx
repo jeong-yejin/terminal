@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
-import { Send, Flag, Heart, ChevronDown, X, AlertCircle, Trophy, Medal } from "lucide-react";
+import Link from "next/link";
+import { Send, Flag, Heart, ChevronDown, X, AlertCircle, Trophy, Medal, ArrowUpRight } from "lucide-react";
+import {
+  MOCK_PROFILES,
+  LEADERBOARD_DATA,
+  type UserProfile,
+  type LeaderboardEntry,
+} from "@/lib/mock-users";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,31 +52,6 @@ type ChatMessage = {
   channel: Channel;
 };
 
-type UserProfile = {
-  id: string;
-  nickname: string;
-  level: number;
-  isReferral: boolean;
-  joinDate: string;
-  lastActive: string;
-  volumeRange: string;
-  xp: number;
-};
-
-type LeaderboardEntry = {
-  rank: number;
-  userId: string;
-  nickname: string;
-  level: number;
-  isReferral: boolean;
-  xp: number;
-  volumeRange: string;
-  winRate: number;
-  weeklyPnl: number;
-  monthlyPnl: number;
-  allTimePnl: number;
-  trades: number;
-};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -88,29 +70,6 @@ const COOLDOWN_MS          = 30000;
 const REPORT_CATEGORIES = ["Spam", "False Info", "Other"] as const;
 type ReportCategory = (typeof REPORT_CATEGORIES)[number];
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_PROFILES: Record<string, UserProfile> = {
-  u1: { id: "u1", nickname: "CryptoWhale88", level: 72, isReferral: false, joinDate: "2024-01-15", lastActive: "2026-04-21", volumeRange: "$1M–$5M",    xp: 18400 },
-  u2: { id: "u2", nickname: "SolanaKing",    level: 45, isReferral: true,  joinDate: "2024-06-03", lastActive: "2026-04-21", volumeRange: "$100K–$500K", xp: 7200  },
-  u3: { id: "u3", nickname: "BTCmaxi",       level: 91, isReferral: false, joinDate: "2023-03-22", lastActive: "2026-04-21", volumeRange: "$5M+",        xp: 42000 },
-  u4: { id: "u4", nickname: "TradeGuru_KR",  level: 33, isReferral: true,  joinDate: "2025-02-10", lastActive: "2026-04-20", volumeRange: "$50K–$100K",  xp: 3800  },
-  u5: { id: "u5", nickname: "DiaHands",      level: 8,  isReferral: false, joinDate: "2026-03-01", lastActive: "2026-04-21", volumeRange: "$1K–$10K",    xp: 420   },
-  me: { id: "me", nickname: "You",           level: MY_LEVEL, isReferral: false, joinDate: "2026-04-01", lastActive: "2026-04-21", volumeRange: "$10K–$50K", xp: 1240 },
-};
-
-const LEADERBOARD_DATA: LeaderboardEntry[] = [
-  { rank: 1, userId: "u3", nickname: "BTCmaxi",       level: 91, isReferral: false, xp: 42000, volumeRange: "$5M+",        winRate: 68.4, weeklyPnl: 24.8,  monthlyPnl: 87.3,  allTimePnl: 412.7, trades: 1840 },
-  { rank: 2, userId: "u1", nickname: "CryptoWhale88", level: 72, isReferral: false, xp: 18400, volumeRange: "$1M–$5M",    winRate: 61.2, weeklyPnl: 18.3,  monthlyPnl: 54.1,  allTimePnl: 231.4, trades: 976  },
-  { rank: 3, userId: "u2", nickname: "SolanaKing",    level: 45, isReferral: true,  xp: 7200,  volumeRange: "$100K–$500K",winRate: 55.8, weeklyPnl: 12.1,  monthlyPnl: 31.7,  allTimePnl: 148.9, trades: 542  },
-  { rank: 4, userId: "u4", nickname: "TradeGuru_KR",  level: 33, isReferral: true,  xp: 3800,  volumeRange: "$50K–$100K", winRate: 52.3, weeklyPnl:  9.4,  monthlyPnl: 22.8,  allTimePnl:  88.2, trades: 318  },
-  { rank: 5, userId: "lb5", nickname: "VolatilityKing",level:28, isReferral: false, xp: 2900,  volumeRange: "$50K–$100K", winRate: 49.1, weeklyPnl:  7.2,  monthlyPnl: 18.1,  allTimePnl:  61.3, trades: 284  },
-  { rank: 6, userId: "lb6", nickname: "MoonMission",  level: 21, isReferral: true,  xp: 2100,  volumeRange: "$10K–$50K",  winRate: 47.8, weeklyPnl:  5.8,  monthlyPnl: 14.5,  allTimePnl:  43.7, trades: 201  },
-  { rank: 7, userId: "lb7", nickname: "EthMaximalist",level: 19, isReferral: false, xp: 1750,  volumeRange: "$10K–$50K",  winRate: 46.3, weeklyPnl:  4.1,  monthlyPnl: 11.2,  allTimePnl:  31.9, trades: 167  },
-  { rank: 8, userId: "me",  nickname: "You",          level: 15, isReferral: false, xp: 1240,  volumeRange: "$10K–$50K",  winRate: 44.7, weeklyPnl:  3.3,  monthlyPnl:  8.6,  allTimePnl:  22.1, trades: 124  },
-  { rank: 9, userId: "u5",  nickname: "DiaHands",     level:  8, isReferral: false, xp: 420,   volumeRange: "$1K–$10K",   winRate: 41.2, weeklyPnl:  1.9,  monthlyPnl:  4.2,  allTimePnl:   9.8, trades:  58  },
-  { rank:10, userId: "lb10",nickname: "NewbieTrader", level:  3, isReferral: true,  xp: 180,   volumeRange: "$1K–$10K",   winRate: 38.9, weeklyPnl:  0.8,  monthlyPnl:  1.7,  allTimePnl:   3.2, trades:  22  },
-];
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   { id: "m1", userId: "u3", nickname: "BTCmaxi",      level: 91, isReferral: false, content: "BTC holding 94k support nicely. Bulls in control", timestamp: new Date(Date.now() - 8*60000), reactions: { "🚀": ["u1","u2"] }, likes: ["u1","u4","u5"], type: "text", channel: "global" },
@@ -206,9 +165,97 @@ function ProfilePopup({ profile, onClose }: { profile: UserProfile; onClose: () 
             </div>
           ))}
         </div>
-        <div className="rounded-lg border border-border-subtle/50 bg-surface-3 p-3 text-[10px] leading-relaxed text-text-disabled">
-          📊 Position & P&L stats are opt-in — available in Phase 2
-        </div>
+        {!profile.statsOptIn ? (
+          <div className="rounded-lg border border-border-subtle/50 bg-surface-3 p-3 text-[10px] leading-relaxed text-text-disabled">
+            📊 Position &amp; P&L stats are opt-in — this trader hasn&apos;t shared their stats
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {/* Open Position */}
+            <div>
+              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-disabled">
+                Current Open Position
+              </div>
+              {profile.openPosition ? (
+                <div className="rounded-lg border border-border-subtle/50 bg-surface-3 p-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-semibold text-text-primary">{profile.openPosition.symbol}</span>
+                      <span className={`rounded px-1 py-0.5 text-[9px] font-bold ${profile.openPosition.side === "Long" ? "bg-positive/15 text-positive" : "bg-negative/15 text-negative"}`}>
+                        {profile.openPosition.side}
+                      </span>
+                      <span className="text-[10px] text-text-disabled">{profile.openPosition.leverage}x</span>
+                    </div>
+                    <span className={`text-[11px] font-bold font-mono ${profile.openPosition.currentPnlPct >= 0 ? "text-positive" : "text-negative"}`}>
+                      {profile.openPosition.currentPnlPct >= 0 ? "+" : ""}{profile.openPosition.currentPnlPct.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="mt-1 text-[10px] text-text-disabled">
+                    Entry <span className="text-text-secondary">${profile.openPosition.entryPrice.toLocaleString()}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border-subtle/50 bg-surface-3 px-2.5 py-2 text-[10px] text-text-disabled">
+                  No open position
+                </div>
+              )}
+            </div>
+
+            {/* 30-Day Stats */}
+            <div>
+              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-disabled">
+                30-Day Stats
+              </div>
+              <div className="flex gap-2">
+                <div className="flex flex-1 flex-col items-center rounded-lg border border-border-subtle/50 bg-surface-3 py-2">
+                  <span className="text-[9px] text-text-disabled">Win Rate</span>
+                  <span className="mt-0.5 text-[13px] font-bold text-text-primary">{profile.winRate30d?.toFixed(1)}%</span>
+                </div>
+                <div className="flex flex-1 flex-col items-center rounded-lg border border-border-subtle/50 bg-surface-3 py-2">
+                  <span className="text-[9px] text-text-disabled">Return</span>
+                  <span className={`mt-0.5 text-[13px] font-bold ${(profile.pnl30d ?? 0) >= 0 ? "text-positive" : "text-negative"}`}>
+                    {(profile.pnl30d ?? 0) >= 0 ? "+" : ""}{profile.pnl30d?.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Closed Trades */}
+            {profile.recentTrades && profile.recentTrades.length > 0 && (
+              <div>
+                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-disabled">
+                  Recent Closed
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  {profile.recentTrades.map((t, i) => (
+                    <div key={i} className="flex items-center justify-between rounded px-2 py-1 even:bg-surface-3/50">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1 h-1 rounded-full shrink-0 ${t.side === "Long" ? "bg-positive" : "bg-negative"}`} />
+                        <span className="text-[10px] font-mono text-text-secondary">{t.symbol.replace("USDT", "")}</span>
+                        <span className={`text-[9px] ${t.side === "Long" ? "text-positive" : "text-negative"}`}>{t.side}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-text-disabled">{t.closedAt}</span>
+                        <span className={`w-14 text-right text-[10px] font-mono font-semibold ${t.pnlPct >= 0 ? "text-positive" : "text-negative"}`}>
+                          {t.pnlPct >= 0 ? "+" : ""}{t.pnlPct.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="shrink-0 border-t border-border-subtle px-4 py-3">
+        <Link
+          href={`/user/${profile.id}`}
+          className="flex w-full items-center justify-center gap-1 text-[11px] font-medium text-text-disabled transition-colors hover:text-primary"
+        >
+          View full profile
+          <ArrowUpRight size={11} />
+        </Link>
       </div>
     </div>
   );

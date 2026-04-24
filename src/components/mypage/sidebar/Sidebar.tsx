@@ -15,6 +15,12 @@ export function Sidebar() {
         name={user?.name}
         email={user?.email}
         avatarUrl={user?.avatarUrl}
+        level={user?.level}
+        xp={user?.xp}
+        xpForNext={user?.xpForNext}
+        rank={user?.rank}
+        followers={user?.followers}
+        posts={user?.posts}
       />
       <SidebarNav />
 

@@ -8,6 +8,14 @@ export interface UserProfile {
   name: string;
   email: string;
   avatarUrl: string;
+  level: number;
+  xp: number;
+  xpForNext: number;
+  rank: number | null;
+  followers: number;
+  following: number;
+  posts: number;
+  isReferral: boolean;
 }
 
 // ─── Overview ─────────────────────────────────────────────────────────────────
