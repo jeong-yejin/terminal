@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Users,
   Bell,
+  Settings,
 } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 
@@ -16,10 +17,10 @@ const NAV_SECTIONS = [
   {
     label: "Trading",
     items: [
-      { href: "/mypage/overview",     label: "Overview",  icon: LayoutDashboard },
-      { href: "/mypage/assets",       label: "Asset",     icon: Wallet },
-      { href: "/mypage/history",      label: "History",   icon: Clock },
-      { href: "/mypage/exchanges",    label: "Exchanges", icon: Building2 },
+      { href: "/mypage/overview",     label: "Overview",    icon: LayoutDashboard },
+      { href: "/mypage/assets",       label: "Asset",       icon: Wallet },
+      { href: "/mypage/history",      label: "History",     icon: Clock },
+      { href: "/mypage/exchanges",    label: "Exchanges",   icon: Building2 },
       { href: "/mypage/performance",  label: "Performance", icon: BarChart2 },
     ],
   },
@@ -29,6 +30,12 @@ const NAV_SECTIONS = [
       { href: "/mypage/activity",      label: "Activity",      icon: MessageSquare },
       { href: "/mypage/social",        label: "Social",        icon: Users },
       { href: "/mypage/notifications", label: "Notifications", icon: Bell },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { href: "/mypage/settings", label: "Settings", icon: Settings },
     ],
   },
 ] as const;

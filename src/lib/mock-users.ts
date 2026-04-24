@@ -107,6 +107,19 @@ export const MOCK_PROFILES: Record<string, UserProfile> = {
     id: "me", nickname: "You", level: 15, isReferral: false,
     joinDate: "2026-04-01", lastActive: "2026-04-21", volumeRange: "$10K–$50K", xp: 1240,
   },
+  // Community-page profiles (keyed by nickname)
+  MoonMission: {
+    id: "MoonMission", nickname: "MoonMission", level: 21, isReferral: true,
+    joinDate: "2023-12-01", lastActive: "2026-04-22", volumeRange: "$300K–$700K", xp: 2100,
+  },
+  ETHbull_kr: {
+    id: "ETHbull_kr", nickname: "ETHbull_kr", level: 31, isReferral: false,
+    joinDate: "2024-02-10", lastActive: "2026-04-20", volumeRange: "$500K–$1M", xp: 2100,
+  },
+  Moonrider: {
+    id: "Moonrider", nickname: "Moonrider", level: 18, isReferral: false,
+    joinDate: "2024-03-15", lastActive: "2026-04-19", volumeRange: "$200K–$500K", xp: 1750,
+  },
 };
 
 export const LEADERBOARD_DATA: LeaderboardEntry[] = [
@@ -125,9 +138,14 @@ export const LEADERBOARD_DATA: LeaderboardEntry[] = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export function getMockProfile(userId: string): UserProfile | null {
-  return MOCK_PROFILES[userId] ?? null;
+  if (MOCK_PROFILES[userId]) return MOCK_PROFILES[userId];
+  // Community page uses nickname as userId — fallback to nickname match
+  return Object.values(MOCK_PROFILES).find((p) => p.nickname === userId) ?? null;
 }
 
 export function getLeaderboardEntry(userId: string): LeaderboardEntry | undefined {
-  return LEADERBOARD_DATA.find((e) => e.userId === userId);
+  return (
+    LEADERBOARD_DATA.find((e) => e.userId === userId) ??
+    LEADERBOARD_DATA.find((e) => e.nickname === userId)
+  );
 }

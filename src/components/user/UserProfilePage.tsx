@@ -2,8 +2,58 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, TrendingUp, Shield, Trophy, Clock, BarChart2 } from "lucide-react";
+import {
+  ArrowLeft, TrendingUp, Shield, Trophy, Clock, BarChart2,
+  ThumbsUp, MessageCircle, Bookmark,
+} from "lucide-react";
 import { getMockProfile, getLeaderboardEntry } from "@/lib/mock-users";
+
+// ─── Post types & mock data ───────────────────────────────────────────────────
+
+type PostCategory = "journal" | "free" | "news";
+
+interface UserPost {
+  id: string;
+  category: PostCategory;
+  title: string;
+  preview: string;
+  timeAgo: string;
+  likes: number;
+  comments: number;
+  scraps: number;
+  tickers: string[];
+}
+
+const CATEGORY_META: Record<PostCategory, { emoji: string; label: string }> = {
+  journal: { emoji: "💼", label: "Trading Journal" },
+  free:    { emoji: "💬", label: "Free Board" },
+  news:    { emoji: "🚨", label: "Info & News" },
+};
+
+const USER_POSTS: Record<string, UserPost[]> = {
+  u3: [
+    { id: "u3p1", category: "journal", title: "BTC Long 50x +23% 진입 근거 정리", preview: "89,200 지지 확인 후 롱 진입. 50배 레버리지지만 진입가 기준 손절 0.5%로 리스크 관리 철저히 했습니다.", timeAgo: "Apr 23", likes: 218, comments: 47, scraps: 31, tickers: ["BTCUSDT"] },
+    { id: "u3p2", category: "journal", title: "SOL Long +22% 리캡 — 기술적 분석 복기", preview: "142 지지 확인 후 롱. 피보나치 0.618 되돌림 구간에서 분할 매수, 목표가 167 달성 후 전량 정리.", timeAgo: "Apr 13", likes: 134, comments: 29, scraps: 18, tickers: ["SOLUSDT"] },
+    { id: "u3p3", category: "free", title: "비트코인 장기 홀더 온체인 데이터 분석", preview: "LTH SOPR 지표가 1.0 이하로 내려온 구간은 역사적으로 강력한 매수 시그널이었습니다. 현재 수치 공유합니다.", timeAgo: "Apr 10", likes: 302, comments: 65, scraps: 84, tickers: ["BTCUSDT"] },
+    { id: "u3p4", category: "news", title: "ETF 자금 유입 데이터 — 주간 브리핑", preview: "이번 주 BTC ETF 순유입 $1.2B 기록. 기관 수요 지속되는 중. 가격 지지력 유지될 가능성 높음.", timeAgo: "Apr 7", likes: 189, comments: 38, scraps: 52, tickers: ["BTCUSDT"] },
+  ],
+  u1: [
+    { id: "u1p1", category: "journal", title: "BTC 20x Long +12% — 92,400 진입 회고", preview: "지지선 재확인 후 롱 진입. 목표가 94,800에서 1/2 정리, 나머지는 트레일링 스탑으로 대응했습니다.", timeAgo: "Apr 22", likes: 98, comments: 21, scraps: 14, tickers: ["BTCUSDT"] },
+    { id: "u1p2", category: "free", title: "펀딩비 음수 구간에서 숏 잡는 전략 공유", preview: "펀딩비가 -0.05% 이하일 때 숏 포지션 진입하면 이자 수익까지 챙길 수 있습니다.", timeAgo: "Apr 18", likes: 61, comments: 13, scraps: 18, tickers: ["ETHUSDT", "BTCUSDT"] },
+    { id: "u1p3", category: "news", title: "연준 FOMC 발언 분석 — 크립토 단기 영향", preview: "파월 의장 비둘기파 발언 이후 BTC 3% 상승. 매크로 환경은 여전히 불확실합니다.", timeAgo: "Apr 14", likes: 89, comments: 21, scraps: 32, tickers: ["BTCUSDT"] },
+  ],
+  u4: [
+    { id: "u4p1", category: "journal", title: "ETH Long +8.1% — 2,450 지지 확인 후 진입", preview: "이더리움 2,450 구간 지지 확인 후 롱. 목표가 2,650에서 전량 정리, 계획대로 실행한 깔끔한 트레이드.", timeAgo: "Apr 21", likes: 34, comments: 8, scraps: 6, tickers: ["ETHUSDT"] },
+    { id: "u4p2", category: "free", title: "초보자를 위한 레버리지 리스크 관리 가이드", preview: "1회 트레이드에 계좌의 1% 이상 손실 나지 않도록 포지션 사이즈 계산하는 방법을 정리했습니다.", timeAgo: "Apr 16", likes: 127, comments: 34, scraps: 45, tickers: [] },
+  ],
+  u2: [
+    { id: "u2p1", category: "journal", title: "SOL 숏 포지션 리뷰 — 고점 잡기의 어려움", preview: "145 고점에서 숏 진입 시도했으나 추가 상승으로 손절. 고점 매도는 역추세 전략이라 리스크가 크다는 걸 다시 배웠습니다.", timeAgo: "Apr 19", likes: 23, comments: 9, scraps: 4, tickers: ["SOLUSDT"] },
+  ],
+};
+
+function getPostsForUser(userId: string, nickname: string): UserPost[] {
+  return USER_POSTS[userId] ?? USER_POSTS[nickname] ?? [];
+}
 
 // ─── Level helpers ────────────────────────────────────────────────────────────
 
@@ -53,6 +103,121 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+function PostCard({ post }: { post: UserPost }) {
+  const { emoji, label } = CATEGORY_META[post.category];
+  return (
+    <article className="flex flex-col gap-2 rounded-xl border border-border-subtle bg-surface-2 p-4 transition-colors hover:border-primary/20 hover:bg-surface-2/60">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="mb-1.5 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-3 px-2 py-0.5 text-[10px] font-medium text-text-secondary">
+              {emoji} {label}
+            </span>
+            {post.tickers.map((t) => (
+              <span key={t} className="text-[10px] font-mono text-primary">#{t}</span>
+            ))}
+          </div>
+          <h3 className="text-[13px] font-semibold text-text-primary leading-snug line-clamp-1">
+            {post.title}
+          </h3>
+          <p className="mt-1 text-[12px] text-text-secondary line-clamp-2 leading-relaxed">
+            {post.preview}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 border-t border-border-subtle/40 pt-2">
+        <span className="text-[11px] text-text-disabled">{post.timeAgo}</span>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="flex items-center gap-1 text-[11px] text-text-disabled">
+            <ThumbsUp size={11} />{post.likes}
+          </span>
+          <span className="flex items-center gap-1 text-[11px] text-text-disabled">
+            <MessageCircle size={11} />{post.comments}
+          </span>
+          <span className="flex items-center gap-1 text-[11px] text-text-disabled">
+            <Bookmark size={11} />{post.scraps}
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ─── Posts Section ────────────────────────────────────────────────────────────
+
+type PostFilter = "all" | PostCategory;
+
+const FILTER_TABS: { key: PostFilter; label: string }[] = [
+  { key: "all",     label: "All" },
+  { key: "journal", label: "Journal" },
+  { key: "free",    label: "Free" },
+  { key: "news",    label: "News" },
+];
+
+function PostsSection({ posts }: { posts: UserPost[] }) {
+  const [activeFilter, setActiveFilter] = useState<PostFilter>("all");
+
+  const filtered = activeFilter === "all"
+    ? posts
+    : posts.filter((p) => p.category === activeFilter);
+
+  const countFor = (key: PostFilter) =>
+    key === "all" ? posts.length : posts.filter((p) => p.category === key).length;
+
+  return (
+    <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5 space-y-4">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-text-disabled">Posts</span>
+          <div className="flex-1 border-t border-border-subtle/40" />
+        </div>
+        <span className="text-[11px] text-text-disabled">{posts.length} total</span>
+      </div>
+
+      {/* Category filter tabs */}
+      {posts.length > 0 && (
+        <div className="flex gap-1 rounded-xl border border-border-subtle bg-surface-2 p-1">
+          {FILTER_TABS.map(({ key, label }) => {
+            const count = countFor(key);
+            const isActive = activeFilter === key;
+            if (key !== "all" && count === 0) return null;
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveFilter(key)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all ${
+                  isActive
+                    ? "bg-surface-1 text-text-primary shadow-sm"
+                    : "text-text-disabled hover:text-text-secondary"
+                }`}
+              >
+                {label}
+                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+                  isActive ? "bg-primary/15 text-primary" : "bg-surface-3 text-text-disabled"
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Post list */}
+      {posts.length === 0 ? (
+        <p className="py-6 text-center text-[12px] text-text-disabled">No posts yet.</p>
+      ) : filtered.length === 0 ? (
+        <p className="py-4 text-center text-[12px] text-text-disabled">No posts in this category.</p>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((post) => <PostCard key={post.id} post={post} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function UserProfilePage({ userId }: { userId: string }) {
@@ -80,6 +245,7 @@ export function UserProfilePage({ userId }: { userId: string }) {
   const levelColor = getLevelColor(profile.level);
   const levelName = getLevelName(profile.level);
   const xpInLevel = profile.xp % 1000;
+  const userPosts = getPostsForUser(profile.id, profile.nickname);
 
   return (
     <div className="min-h-screen bg-background">
@@ -320,6 +486,8 @@ export function UserProfilePage({ userId }: { userId: string }) {
             )}
           </div>
         )}
+        {/* ── Posts ── */}
+        <PostsSection posts={userPosts} />
       </div>
     </div>
   );

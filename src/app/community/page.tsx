@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import Link from "next/link";
 import {
   Pencil, ThumbsUp, ThumbsDown, MessageSquare, Bookmark, Flame, Gem,
   ChevronDown, X, Search, TrendingUp, Users, Hash, Bell,
@@ -496,12 +497,13 @@ function UserProfilePopup({
         >
           {following ? "Following ✓" : "Follow"}
         </button>
-        <button
+        <Link
+          href={`/user/${profile.id}`}
           onClick={(e) => e.stopPropagation()}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border-subtle bg-surface-2 py-2 text-[12px] font-medium text-text-secondary transition-colors hover:bg-surface-3"
         >
-          View Posts
-        </button>
+          View Profile
+        </Link>
       </div>
     </div>
   );
