@@ -1,20 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
-import Link from "next/link";
-import { Send, Flag, Heart, ChevronDown, X, AlertCircle, Trophy, Medal, ArrowUpRight } from "lucide-react";
-import {
-  MOCK_PROFILES,
-  LEADERBOARD_DATA,
-  type UserProfile,
-  type LeaderboardEntry,
-} from "@/lib/mock-users";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Flag, Heart, ChevronDown, X, AlertCircle } from "lucide-react";
+import { MOCK_PROFILES } from "@/lib/mock-users";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Channel  = "global" | "korean";
-type MainView = "chat" | "leaderboard";
-type LbPeriod = "all" | "weekly" | "monthly";
+type Channel = "global" | "korean";
 
 const EMOJI_REACTIONS = [
   { key: "🚀", label: "Bullish" },
@@ -118,147 +110,6 @@ function fmtTime(d: Date) {
 
 function fmtNum(n: number, dec = 2) {
   return n.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
-}
-
-// ─── Profile Popup ────────────────────────────────────────────────────────────
-
-function ProfilePopup({ profile, onClose }: { profile: UserProfile; onClose: () => void }) {
-  const { text, glow, bg } = getLevelStyle(profile.level);
-  const xpInLevel = profile.xp % 1000;
-  return (
-    <div className="absolute inset-0 z-50 flex flex-col border-l border-border-subtle bg-surface-2 shadow-2xl">
-      <div className="flex shrink-0 items-center justify-between border-b border-border-subtle px-4 py-3">
-        <span className="text-[12px] font-semibold text-text-primary">Profile</span>
-        <button onClick={onClose} className="text-text-disabled hover:text-text-secondary"><X size={14} /></button>
-      </div>
-      <div className="flex flex-col gap-4 overflow-y-auto p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[20px] font-bold text-text-secondary ring-2 ring-border-subtle">
-            {profile.nickname[0].toUpperCase()}
-          </div>
-          <div>
-            <div className="text-[13px] font-semibold text-text-primary">{profile.nickname}</div>
-            <LevelBadge level={profile.level} isReferral={profile.isReferral} />
-          </div>
-        </div>
-        <div>
-          <div className="mb-1 flex justify-between text-[10px]">
-            <span className="text-text-disabled">XP Progress</span>
-            <span className={`font-mono font-bold ${text} ${glow ? "drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" : ""}`}>
-              {profile.xp.toLocaleString()} XP
-            </span>
-          </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
-            <div className={`h-full rounded-full ${bg} transition-all`} style={{ width: `${Math.min(xpInLevel / 10, 100)}%` }} />
-          </div>
-          <div className="mt-0.5 text-right text-[10px] text-text-disabled">{xpInLevel}/1000 to next level</div>
-        </div>
-        <div className="flex flex-col gap-2.5">
-          {[
-            { label: "Joined",      value: profile.joinDate },
-            { label: "Last Active", value: profile.lastActive },
-            { label: "Volume",      value: profile.volumeRange },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex justify-between text-[11px]">
-              <span className="text-text-disabled">{label}</span>
-              <span className="text-text-secondary">{value}</span>
-            </div>
-          ))}
-        </div>
-        {!profile.statsOptIn ? (
-          <div className="rounded-lg border border-border-subtle/50 bg-surface-3 p-3 text-[10px] leading-relaxed text-text-disabled">
-            📊 Position &amp; P&L stats are opt-in — this trader hasn&apos;t shared their stats
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {/* Open Position */}
-            <div>
-              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-disabled">
-                Current Open Position
-              </div>
-              {profile.openPosition ? (
-                <div className="rounded-lg border border-border-subtle/50 bg-surface-3 p-2.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-semibold text-text-primary">{profile.openPosition.symbol}</span>
-                      <span className={`rounded px-1 py-0.5 text-[9px] font-bold ${profile.openPosition.side === "Long" ? "bg-positive/15 text-positive" : "bg-negative/15 text-negative"}`}>
-                        {profile.openPosition.side}
-                      </span>
-                      <span className="text-[10px] text-text-disabled">{profile.openPosition.leverage}x</span>
-                    </div>
-                    <span className={`text-[11px] font-bold font-mono ${profile.openPosition.currentPnlPct >= 0 ? "text-positive" : "text-negative"}`}>
-                      {profile.openPosition.currentPnlPct >= 0 ? "+" : ""}{profile.openPosition.currentPnlPct.toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="mt-1 text-[10px] text-text-disabled">
-                    Entry <span className="text-text-secondary">${profile.openPosition.entryPrice.toLocaleString()}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-border-subtle/50 bg-surface-3 px-2.5 py-2 text-[10px] text-text-disabled">
-                  No open position
-                </div>
-              )}
-            </div>
-
-            {/* 30-Day Stats */}
-            <div>
-              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-disabled">
-                30-Day Stats
-              </div>
-              <div className="flex gap-2">
-                <div className="flex flex-1 flex-col items-center rounded-lg border border-border-subtle/50 bg-surface-3 py-2">
-                  <span className="text-[9px] text-text-disabled">Win Rate</span>
-                  <span className="mt-0.5 text-[13px] font-bold text-text-primary">{profile.winRate30d?.toFixed(1)}%</span>
-                </div>
-                <div className="flex flex-1 flex-col items-center rounded-lg border border-border-subtle/50 bg-surface-3 py-2">
-                  <span className="text-[9px] text-text-disabled">Return</span>
-                  <span className={`mt-0.5 text-[13px] font-bold ${(profile.pnl30d ?? 0) >= 0 ? "text-positive" : "text-negative"}`}>
-                    {(profile.pnl30d ?? 0) >= 0 ? "+" : ""}{profile.pnl30d?.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Closed Trades */}
-            {profile.recentTrades && profile.recentTrades.length > 0 && (
-              <div>
-                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-disabled">
-                  Recent Closed
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  {profile.recentTrades.map((t, i) => (
-                    <div key={i} className="flex items-center justify-between rounded px-2 py-1 even:bg-surface-3/50">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-1 h-1 rounded-full shrink-0 ${t.side === "Long" ? "bg-positive" : "bg-negative"}`} />
-                        <span className="text-[10px] font-mono text-text-secondary">{t.symbol.replace("USDT", "")}</span>
-                        <span className={`text-[9px] ${t.side === "Long" ? "text-positive" : "text-negative"}`}>{t.side}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] text-text-disabled">{t.closedAt}</span>
-                        <span className={`w-14 text-right text-[10px] font-mono font-semibold ${t.pnlPct >= 0 ? "text-positive" : "text-negative"}`}>
-                          {t.pnlPct >= 0 ? "+" : ""}{t.pnlPct.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="shrink-0 border-t border-border-subtle px-4 py-3">
-        <Link
-          href={`/user/${profile.id}`}
-          className="flex w-full items-center justify-center gap-1 text-[11px] font-medium text-text-disabled transition-colors hover:text-primary"
-        >
-          View full profile
-          <ArrowUpRight size={11} />
-        </Link>
-      </div>
-    </div>
-  );
 }
 
 // ─── Position Card ────────────────────────────────────────────────────────────
@@ -444,125 +295,22 @@ function MessageItem({ msg, myUserId, onReact, onLike, onReport, onProfileClick 
   );
 }
 
-// ─── Leaderboard ──────────────────────────────────────────────────────────────
-
-const RANK_ICONS: Record<number, ReactNode> = {
-  1: <Trophy size={13} className="text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />,
-  2: <Medal  size={13} className="text-slate-300" />,
-  3: <Medal  size={13} className="text-amber-600" />,
-};
-
-function LeaderboardView({ onProfileClick }: { onProfileClick: (userId: string) => void }) {
-  const [period, setPeriod] = useState<LbPeriod>("weekly");
-
-  const pnlKey: Record<LbPeriod, keyof LeaderboardEntry> = {
-    all: "allTimePnl", weekly: "weeklyPnl", monthly: "monthlyPnl",
-  };
-
-  const sorted = [...LEADERBOARD_DATA].sort((a, b) => {
-    const ka = pnlKey[period];
-    return (b[ka] as number) - (a[ka] as number);
-  }).map((e, i) => ({ ...e, rank: i + 1 }));
-
-  const myEntry = sorted.find(e => e.userId === MY_USER_ID);
-
-  return (
-    <div className="flex h-full flex-col">
-      {/* Period tabs */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-border-subtle px-3 py-2">
-        {(["weekly", "monthly", "all"] as LbPeriod[]).map((p) => (
-          <button key={p} onClick={() => setPeriod(p)}
-            className={`rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors ${period === p ? "bg-surface-3 text-text-primary" : "text-text-disabled hover:text-text-secondary"}`}>
-            {p === "all" ? "All Time" : p === "weekly" ? "Weekly" : "Monthly"}
-          </button>
-        ))}
-      </div>
-
-      {/* Table */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {sorted.map((entry) => {
-          const pnl     = entry[pnlKey[period]] as number;
-          const isMe    = entry.userId === MY_USER_ID;
-          const { text: lvText, glow } = getLevelStyle(entry.level);
-
-          return (
-            <div key={entry.userId}
-              className={`flex items-center gap-2 px-3 py-2 transition-colors hover:bg-surface-2/60 ${isMe ? "border-l-2 border-primary bg-primary/5" : "border-l-2 border-transparent"}`}>
-              {/* Rank */}
-              <div className="flex w-5 shrink-0 items-center justify-center">
-                {RANK_ICONS[entry.rank] ?? (
-                  <span className="text-[11px] font-bold text-text-disabled">{entry.rank}</span>
-                )}
-              </div>
-
-              {/* Avatar */}
-              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[11px] font-bold text-text-secondary ring-1 ${getLevelStyle(entry.level).ring}`}>
-                {entry.nickname[0].toUpperCase()}
-              </div>
-
-              {/* Info */}
-              <div className="min-w-0 flex-1">
-                <button onClick={() => onProfileClick(entry.userId)}
-                  className={`block truncate text-[11px] font-semibold hover:underline ${lvText} ${glow ? "drop-shadow-[0_0_5px_rgba(251,191,36,0.9)]" : ""}`}>
-                  {entry.nickname}
-                </button>
-                <div className="flex items-center gap-1.5">
-                  <LevelBadge level={entry.level} isReferral={entry.isReferral} />
-                  <span className="text-[10px] text-text-disabled">·</span>
-                  <span className="text-[10px] text-text-disabled">{entry.winRate}% WR</span>
-                </div>
-              </div>
-
-              {/* PnL */}
-              <div className="shrink-0 text-right">
-                <div className={`text-[12px] font-bold tabular-nums ${pnl >= 0 ? "text-positive" : "text-negative"}`}>
-                  {pnl >= 0 ? "+" : ""}{pnl.toFixed(1)}%
-                </div>
-                <div className="text-[10px] text-text-disabled">{entry.trades} trades</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* My ranking sticky footer */}
-      {myEntry && (
-        <div className="shrink-0 border-t border-border-subtle bg-surface-2 px-3 py-2">
-          <div className="mb-1 text-[10px] text-text-disabled">Your ranking</div>
-          <div className="flex items-center gap-2">
-            <span className="w-5 text-center text-[11px] font-bold text-primary">#{myEntry.rank}</span>
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[10px] font-bold text-text-secondary">
-              Y
-            </div>
-            <div className="flex-1 text-[11px] text-text-primary">You</div>
-            <div className="text-right">
-              <span className={`text-[12px] font-bold tabular-nums ${(myEntry[pnlKey[period]] as number) >= 0 ? "text-positive" : "text-negative"}`}>
-                {(myEntry[pnlKey[period]] as number) >= 0 ? "+" : ""}{(myEntry[pnlKey[period]] as number).toFixed(1)}%
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Community Chat ───────────────────────────────────────────────────────────
 
 export function CommunityChat({
   positionShare,
   onClose,
+  onProfileClick,
 }: {
   positionShare?: { pos: SharedPosition; rev: number } | null;
   onClose?: () => void;
+  onProfileClick?: (userId: string) => void;
 }) {
-  const [mainView, setMainView]             = useState<MainView>("chat");
   const [channel, setChannel]               = useState<Channel>("global");
   const [messages, setMessages]             = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [input, setInput]                   = useState("");
   const [isAtBottom, setIsAtBottom]         = useState(true);
   const [newMsgCount, setNewMsgCount]       = useState(0);
-  const [profileUserId, setProfileUserId]   = useState<string | null>(null);
   const [reportMsgId, setReportMsgId]       = useState<string | null>(null);
   const [cooldownUntil, setCooldownUntil]   = useState<number | null>(null);
   const [cooldownLeft, setCooldownLeft]     = useState(0);
@@ -631,8 +379,7 @@ export function CommunityChat({
       isReferral: false, content: "", timestamp: new Date(), reactions: {}, likes: [],
       type: "position", channel, positionCard: positionShare.pos,
     }]);
-    if (mainView !== "chat") setMainView("chat");
-  }, [positionShare, channel, mainView]);
+  }, [positionShare, channel]);
 
   const scrollToBottom = () => {
     const el = listRef.current;
@@ -684,97 +431,77 @@ export function CommunityChat({
 
   const charLeft  = MAX_CHARS - input.length;
   const isBlocked = (!!cooldownUntil && Date.now() < cooldownUntil) || rateLimitHit;
-  const profile   = profileUserId ? (MOCK_PROFILES[profileUserId] ?? null) : null;
 
   return (
     <div className="relative flex h-full w-full flex-col bg-surface-1">
 
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex h-10 shrink-0 items-center gap-0 border-b border-border-subtle px-2">
-        {/* View tabs */}
+      <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border-subtle px-2">
+        {/* Channel tabs */}
         <div className="flex items-center gap-0.5 rounded-lg border border-border-subtle bg-surface-2 p-0.5">
-          {(["chat", "leaderboard"] as MainView[]).map((v) => (
-            <button key={v} onClick={() => setMainView(v)}
-              className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors ${mainView === v ? "bg-surface-3 text-text-primary shadow-sm" : "text-text-disabled hover:text-text-secondary"}`}>
-              {v === "chat" ? "Chat" : <><Trophy size={10} className="inline" /> Board</>}
+          {(["global", "korean"] as Channel[]).map((ch) => (
+            <button key={ch} onClick={() => { setChannel(ch); setNewMsgCount(0); }}
+              className={`rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors ${channel === ch ? "bg-surface-3 text-text-primary shadow-sm" : "text-text-disabled hover:text-text-secondary"}`}>
+              #{ch === "global" ? "Global" : "KR"}
             </button>
           ))}
         </div>
 
-        {/* Channel tabs (chat only) */}
-        {mainView === "chat" && (
-          <div className="ml-1.5 flex items-center gap-0.5 rounded-lg border border-border-subtle bg-surface-2 p-0.5">
-            {(["global", "korean"] as Channel[]).map((ch) => (
-              <button key={ch} onClick={() => { setChannel(ch); setNewMsgCount(0); }}
-                className={`rounded-md px-2 py-0.5 text-[10px] font-medium transition-colors ${channel === ch ? "bg-surface-3 text-text-primary shadow-sm" : "text-text-disabled hover:text-text-secondary"}`}>
-                #{ch === "global" ? "Global" : "KR"}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Chat label */}
+        <span className="flex-1 text-[11px] font-semibold text-text-secondary">Live Chat</span>
 
         {/* Close */}
         {onClose && (
-          <button onClick={onClose} title="Hide Community"
-            className="ml-auto rounded p-1 text-text-disabled transition-colors hover:bg-surface-2 hover:text-text-secondary">
+          <button onClick={onClose} title="Hide Chat"
+            className="rounded p-1 text-text-disabled transition-colors hover:bg-surface-2 hover:text-text-secondary">
             <X size={13} />
           </button>
         )}
       </div>
 
-      {/* ── Content ─────────────────────────────────────────────── */}
-      {mainView === "leaderboard" ? (
-        <LeaderboardView onProfileClick={(id) => setProfileUserId(id)} />
-      ) : (
-        <>
-          {/* Message list */}
-          <div ref={listRef} className="relative min-h-0 flex-1 overflow-y-auto">
-            {filteredMessages.length === 0 && (
-              <div className="flex h-full items-center justify-center text-[12px] text-text-disabled">No messages yet.</div>
-            )}
-            {filteredMessages.map((msg) => (
-              <MessageItem key={msg.id} msg={msg} myUserId={MY_USER_ID}
-                onReact={handleReact} onLike={handleLike}
-                onReport={(id) => setReportMsgId(id)}
-                onProfileClick={(id) => setProfileUserId(id)} />
-            ))}
-            {!isAtBottom && newMsgCount > 0 && (
-              <button onClick={scrollToBottom}
-                className="sticky bottom-2 mx-auto flex w-fit items-center gap-1 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-black shadow-lg">
-                <ChevronDown size={12} />{newMsgCount} new
+      {/* ── Message list ─────────────────────────────────────────── */}
+      <div ref={listRef} className="relative min-h-0 flex-1 overflow-y-auto">
+        {filteredMessages.length === 0 && (
+          <div className="flex h-full items-center justify-center text-[12px] text-text-disabled">No messages yet.</div>
+        )}
+        {filteredMessages.map((msg) => (
+          <MessageItem key={msg.id} msg={msg} myUserId={MY_USER_ID}
+            onReact={handleReact} onLike={handleLike}
+            onReport={(id) => setReportMsgId(id)}
+            onProfileClick={(id) => onProfileClick?.(id)} />
+        ))}
+        {!isAtBottom && newMsgCount > 0 && (
+          <button onClick={scrollToBottom}
+            className="sticky bottom-2 mx-auto flex w-fit items-center gap-1 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-black shadow-lg">
+            <ChevronDown size={12} />{newMsgCount} new
+          </button>
+        )}
+      </div>
+
+      {/* ── Input ────────────────────────────────────────────────── */}
+      <div className="shrink-0 border-t border-border-subtle bg-surface-1 p-2">
+        {isBlocked ? (
+          <div className="rounded-lg bg-cautionary/10 px-3 py-2.5 text-center text-[11px] text-cautionary">
+            {cooldownUntil && Date.now() < cooldownUntil ? `Cooldown: ${cooldownLeft}s remaining` : "Message limit reached. Try again shortly."}
+          </div>
+        ) : (
+          <>
+            <div className="relative">
+              <textarea value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                placeholder={`Message #${channel === "global" ? "global" : "KR"}...`}
+                maxLength={MAX_CHARS} rows={2}
+                className="w-full resize-none rounded-lg border border-border-subtle bg-surface-2 px-3 py-2 pr-8 text-[12px] text-text-primary placeholder:text-text-disabled focus:border-primary/50 focus:outline-none" />
+              <button onClick={handleSend} disabled={!input.trim() || input.length > MAX_CHARS}
+                className="absolute bottom-2 right-2 rounded p-1 text-text-disabled transition-colors hover:text-primary disabled:opacity-30">
+                <Send size={12} />
               </button>
-            )}
-          </div>
-
-          {/* Input */}
-          <div className="shrink-0 border-t border-border-subtle bg-surface-1 p-2">
-            {isBlocked ? (
-              <div className="rounded-lg bg-cautionary/10 px-3 py-2.5 text-center text-[11px] text-cautionary">
-                {cooldownUntil && Date.now() < cooldownUntil ? `Cooldown: ${cooldownLeft}s remaining` : "Message limit reached. Try again shortly."}
-              </div>
-            ) : (
-              <>
-                <div className="relative">
-                  <textarea value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    placeholder={`Message #${channel === "global" ? "global" : "KR"}...`}
-                    maxLength={MAX_CHARS} rows={2}
-                    className="w-full resize-none rounded-lg border border-border-subtle bg-surface-2 px-3 py-2 pr-8 text-[12px] text-text-primary placeholder:text-text-disabled focus:border-primary/50 focus:outline-none" />
-                  <button onClick={handleSend} disabled={!input.trim() || input.length > MAX_CHARS}
-                    className="absolute bottom-2 right-2 rounded p-1 text-text-disabled transition-colors hover:text-primary disabled:opacity-30">
-                    <Send size={12} />
-                  </button>
-                </div>
-                <div className={`mt-1 text-right text-[10px] ${charLeft <= 30 ? "text-cautionary" : "text-text-disabled"}`}>{charLeft}</div>
-              </>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* ── Profile overlay ─────────────────────────────────────── */}
-      {profile && <ProfilePopup profile={profile} onClose={() => setProfileUserId(null)} />}
+            </div>
+            <div className={`mt-1 text-right text-[10px] ${charLeft <= 30 ? "text-cautionary" : "text-text-disabled"}`}>{charLeft}</div>
+          </>
+        )}
+      </div>
 
       {/* ── Report modal ─────────────────────────────────────────── */}
       {reportMsgId && <ReportModal onClose={() => setReportMsgId(null)} />}

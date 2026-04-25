@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, ChevronLeft, ChevronRight, X, Trophy } from "lucide-react";
-import Link from "next/link";
+import { MessageSquare, X, Trophy } from "lucide-react";
 import { SymbolBar } from "@/components/trade/SymbolBar";
 import { ChartArea } from "@/components/trade/ChartArea";
 import { TradeBottomPanel } from "@/components/trade/TradeBottomPanel";
@@ -10,10 +9,17 @@ import { Orderbook } from "@/components/trade/Orderbook";
 import { OrderForm } from "@/components/trade/OrderForm";
 import { BalancePanel } from "@/components/trade/BalancePanel";
 import { CommunityChat, type SharedPosition } from "@/components/trade/CommunityChat";
+import { RankingPanel } from "@/components/trade/RankingPanel";
+import { ProfilePanel } from "@/components/trade/ProfilePanel";
 import { EXCHANGES, SYMBOLS, type ExchangeMeta, type SymbolMeta } from "@/components/trade/constants";
 
+// ─── Right panel state ────────────────────────────────────────────────────────
+
+type RightPanel = "chat" | "ranking" | "profile" | null;
+
+const MY_USER_ID = "me";
+
 // ─── Session rebate strip ─────────────────────────────────────────────────────
-// Shown below SymbolBar — gives users continuous visibility of earned rebates
 
 function SessionRebateStrip({ onDismiss }: { onDismiss: () => void }) {
   const sessionEarned = 8.20;
@@ -34,13 +40,13 @@ function SessionRebateStrip({ onDismiss }: { onDismiss: () => void }) {
       <span className="h-3 w-px bg-primary/20" aria-hidden="true" />
 
       {/* Today's rank */}
-      <Link
-        href="/mypage/performance"
+      <button
+        onClick={() => {}}
         className="flex items-center gap-1.5 text-text-secondary transition-colors hover:text-text-primary"
       >
         <Trophy size={11} className="text-primary/60" />
         Today&apos;s rank <span className="num-mono font-semibold text-text-primary">#{myRank}</span>
-      </Link>
+      </button>
 
       <span className="h-3 w-px bg-primary/20" aria-hidden="true" />
 
@@ -65,16 +71,32 @@ function SessionRebateStrip({ onDismiss }: { onDismiss: () => void }) {
 // ─── Trade page ───────────────────────────────────────────────────────────────
 
 export default function TradePage() {
-  const [exchange, setExchange]           = useState<ExchangeMeta>(EXCHANGES[1]);
-  const [symbol, setSymbol]               = useState<SymbolMeta>(SYMBOLS[0]);
-  const [isChatOpen, setIsChatOpen]       = useState(true);
+  const [exchange, setExchange]             = useState<ExchangeMeta>(EXCHANGES[1]);
+  const [symbol, setSymbol]                 = useState<SymbolMeta>(SYMBOLS[0]);
+  const [rightPanel, setRightPanel]           = useState<RightPanel>("chat");
+  const [profileUserId, setProfileUserId]     = useState<string | null>(null);
+  const [profileOrigin, setProfileOrigin]     = useState<RightPanel>("chat");
   const [showRebateStrip, setShowRebateStrip] = useState(true);
-  const [positionShare, setPositionShare] = useState<{ pos: SharedPosition; rev: number } | null>(null);
+  const [positionShare, setPositionShare]     = useState<{ pos: SharedPosition; rev: number } | null>(null);
 
   const handleSharePosition = (pos: SharedPosition) => {
     setPositionShare({ pos, rev: Date.now() });
-    setIsChatOpen(true);
+    setRightPanel("chat");
   };
+
+  const handleProfileClick = (userId: string) => {
+    // Remember which panel we came from so closing returns there
+    if (rightPanel !== "profile") setProfileOrigin(rightPanel);
+    setProfileUserId(userId);
+    setRightPanel("profile");
+  };
+
+  const handleCloseProfile = () => {
+    setRightPanel(profileOrigin ?? "chat");
+    setProfileUserId(null);
+  };
+
+  const isPanelOpen = rightPanel !== null;
 
   return (
     <div className="flex h-[calc(100vh-56px)] flex-col overflow-hidden bg-background">
@@ -101,48 +123,77 @@ export default function TradePage() {
           <TradeBottomPanel onSharePosition={handleSharePosition} />
         </div>
 
-        {/* Orderbook + order form + balance */}
-        <aside className="flex w-72 shrink-0 flex-col overflow-hidden border-l border-border-subtle bg-surface-1 xl:w-80">
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <Orderbook symbol={symbol} />
-          </div>
-          <div className="shrink-0 overflow-y-auto" style={{ maxHeight: "58vh" }}>
-            <OrderForm symbol={symbol} />
-            <BalancePanel />
-          </div>
+        {/* Orderbook */}
+        <aside className="flex w-48 shrink-0 flex-col overflow-hidden border-l border-border-subtle bg-surface-1">
+          <Orderbook symbol={symbol} />
         </aside>
 
-        {/* Community drawer */}
+        {/* Order form + balance */}
+        <aside className="flex w-[240px] shrink-0 flex-col overflow-y-auto border-l border-border-subtle bg-surface-1">
+          <OrderForm symbol={symbol} />
+          <BalancePanel />
+        </aside>
+
+        {/* Right panel slot — slides in/out */}
         <div
-          className="flex shrink-0 overflow-hidden border-l border-border-subtle transition-[width] duration-300 ease-in-out"
-          style={{ width: isChatOpen ? 284 : 0 }}
+          className="shrink-0 overflow-hidden border-l border-border-subtle transition-[width] duration-300 ease-in-out"
+          style={{ width: isPanelOpen ? 252 : 0 }}
         >
-          <div className="flex h-full w-[284px] shrink-0 flex-col">
-            <CommunityChat
-              positionShare={positionShare}
-              onClose={() => setIsChatOpen(false)}
-            />
+          <div className="flex h-full w-[252px] flex-col">
+            {rightPanel === "chat" && (
+              <CommunityChat
+                positionShare={positionShare}
+                onClose={() => setRightPanel(null)}
+                onProfileClick={handleProfileClick}
+              />
+            )}
+            {rightPanel === "ranking" && (
+              <RankingPanel
+                myUserId={MY_USER_ID}
+                onClose={() => setRightPanel(null)}
+                onProfileClick={handleProfileClick}
+              />
+            )}
+            {rightPanel === "profile" && profileUserId && (
+              <ProfilePanel
+                userId={profileUserId}
+                onClose={handleCloseProfile}
+              />
+            )}
           </div>
         </div>
 
-        {/* Toggle strip */}
-        <button
-          onClick={() => setIsChatOpen((v) => !v)}
-          title={isChatOpen ? "Hide Community" : "Open Community"}
-          className="flex w-6 shrink-0 flex-col items-center justify-start gap-3 border-l border-border-subtle bg-surface-1 py-4 text-text-disabled transition-colors hover:bg-surface-2 hover:text-text-secondary"
-        >
-          {isChatOpen ? (
-            <ChevronRight size={12} />
-          ) : (
-            <>
-              <ChevronLeft size={12} />
-              <MessageSquare size={12} />
-              <span className="[writing-mode:vertical-lr] rotate-180 text-[9px] font-semibold tracking-widest">
-                CHAT
-              </span>
-            </>
-          )}
-        </button>
+        {/* Icon strip — always visible at far right */}
+        <aside className="flex w-10 shrink-0 flex-col items-center gap-1 border-l border-border-subtle bg-surface-1 py-3">
+
+          {/* Chat toggle */}
+          <button
+            onClick={() => setRightPanel(p => p === "chat" ? null : "chat")}
+            title={rightPanel === "chat" ? "Close Chat" : "Open Chat"}
+            className={`flex h-9 w-9 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg transition-colors focus-ring ${
+              rightPanel === "chat"
+                ? "bg-surface-3 text-text-primary"
+                : "text-text-disabled hover:bg-surface-2 hover:text-text-secondary"
+            }`}
+          >
+            <MessageSquare size={14} />
+            <span className="text-[8px] font-semibold tracking-wide">Chat</span>
+          </button>
+
+          {/* Leaderboard toggle */}
+          <button
+            onClick={() => setRightPanel(p => p === "ranking" ? null : "ranking")}
+            title={rightPanel === "ranking" ? "Close Ranking" : "Open Ranking"}
+            className={`flex h-9 w-9 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg transition-colors focus-ring ${
+              rightPanel === "ranking"
+                ? "bg-surface-3 text-text-primary"
+                : "text-text-disabled hover:bg-surface-2 hover:text-text-secondary"
+            }`}
+          >
+            <Trophy size={14} />
+            <span className="text-[8px] font-semibold tracking-wide">Rank</span>
+          </button>
+        </aside>
       </div>
     </div>
   );

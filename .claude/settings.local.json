@@ -29,7 +29,8 @@
       "Bash(xargs ls *)",
       "mcp__c74936fe-5dcb-4b04-a72e-4301f14ff47e__get_metadata",
       "mcp__claude_ai_Figma__use_figma",
-      "mcp__claude_ai_Figma__get_metadata"
+      "mcp__claude_ai_Figma__get_metadata",
+      "WebFetch(domain:www.figma.com)"
     ]
   }
 }

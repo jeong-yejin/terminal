@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
   Pencil, ThumbsUp, ThumbsDown, MessageSquare, Bookmark, Flame, Gem,
   ChevronDown, X, Search, TrendingUp, Users, Hash, Bell,
   ArrowUp, ArrowDown, UserCircle2, MoreHorizontal, Link2,
-  Flag, Ban, Check, Image as ImageIcon, Briefcase,
+  Flag, Ban, Check, Image as ImageIcon, Briefcase, AlertTriangle,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -86,10 +86,10 @@ const MOCK_POSITION: PositionSnap = {
 
 // ─── Category metadata ───────────────────────────────────────────────────────
 
-const CATEGORY_META: Record<Exclude<Category, "all">, { emoji: string; label: string }> = {
-  journal: { emoji: "💼", label: "Trading Journal" },
-  free:    { emoji: "🆓", label: "Free Board"      },
-  news:    { emoji: "🚨", label: "Info & News"     },
+const CATEGORY_META: Record<Exclude<Category, "all">, { label: string }> = {
+  journal: { label: "Trading Journal" },
+  free:    { label: "Free Board"      },
+  news:    { label: "Info & News"     },
 };
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -238,11 +238,17 @@ function LevelBadge({ level }: { level: number }) {
   return <span className={`text-[10px] font-bold leading-none ${text}`}>Lv.{level}</span>;
 }
 
+const CATEGORY_ICON: Record<Exclude<Category, "all">, React.ReactNode> = {
+  journal: <Briefcase size={11} />,
+  free:    <MessageSquare size={11} />,
+  news:    <Bell size={11} />,
+};
+
 function CategoryBadge({ category }: { category: Exclude<Category, "all"> }) {
   const meta = CATEGORY_META[category];
   return (
     <span className="flex items-center gap-1 text-[11px] font-medium text-text-tertiary">
-      <span>{meta.emoji}</span>
+      {CATEGORY_ICON[category]}
       <span>{meta.label}</span>
     </span>
   );
@@ -253,11 +259,13 @@ function CategoryBadge({ category }: { category: Exclude<Category, "all"> }) {
 function PositionCardPreview({ pos }: { pos: PositionSnap }) {
   const isLong = pos.side === "Long";
   return (
-    <div className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-[12px] ${
-      isLong ? "border-positive/20 bg-positive/5" : "border-negative/20 bg-negative/5"
+    <div className={`flex items-center gap-3 rounded-md px-3 py-2 text-[12px] ${
+      isLong ? "bg-positive/[0.06]" : "bg-negative/[0.06]"
     }`}>
       <span className="font-bold text-text-secondary">{pos.symbol}</span>
-      <span className={`font-bold ${isLong ? "text-positive" : "text-negative"}`}>
+      <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${
+        isLong ? "bg-positive/10 text-positive" : "bg-negative/10 text-negative"
+      }`}>
         {pos.side} {pos.lev}×
       </span>
       <span className={`num-mono ml-auto font-bold ${isLong ? "text-positive" : "text-negative"}`}>
@@ -423,84 +431,89 @@ function UserProfilePopup({
   profile: UserProfile;
   onClose: () => void;
 }) {
-  const { text, bg, border } = getLevelStyle(profile.level);
+  const { text } = getLevelStyle(profile.level);
   const [following, setFollowing] = useState(false);
   const pct = Math.min(100, Math.round((profile.xp / profile.xpForNext) * 100));
 
   return (
-    <div className="absolute left-0 top-full z-40 mt-2 w-64 rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-2xl">
-      {/* Close */}
-      <button
-        onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="absolute right-3 top-3 text-text-disabled transition-colors hover:text-text-secondary"
-      >
-        <X size={13} />
-      </button>
+    <div className="absolute left-0 top-full z-40 mt-2 w-[260px] overflow-hidden rounded-2xl border border-border-subtle bg-surface-1 shadow-2xl">
 
-      {/* Avatar + name */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${bg} ${border} text-[14px] font-bold ${text}`}>
-          {profile.nickname[0].toUpperCase()}
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-[13px] font-bold text-text-primary">{profile.nickname}</p>
-          <p className={`text-[11px] font-semibold ${text}`}>Lv.{profile.level} {getLevelName(profile.level)}</p>
-        </div>
-      </div>
-
-      {/* XP bar */}
-      <div className="mb-3">
-        <div className="mb-1 flex items-center justify-between text-[10px] text-text-disabled">
-          <span>XP</span>
-          <span className="num-mono">{profile.xp.toLocaleString()} / {profile.xpForNext.toLocaleString()}</span>
-        </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${pct}%`, background: `var(--color-primary, #CAFF5D)` }}
-          />
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="mb-4 grid grid-cols-3 gap-2 rounded-xl bg-surface-2 p-3">
-        {[
-          { label: "Posts", value: profile.posts },
-          { label: "Followers", value: profile.followers },
-        ].map(s => (
-          <div key={s.label} className="flex flex-col items-center gap-0.5 col-span-1">
-            <span className="num-mono text-[13px] font-bold text-text-primary">{s.value}</span>
-            <span className="text-[10px] text-text-disabled">{s.label}</span>
-          </div>
-        ))}
-        <div className="flex flex-col items-center gap-0.5 col-span-1">
-          <span className="text-[11px] font-bold text-text-primary truncate text-center leading-tight">{profile.joinDate}</span>
-          <span className="text-[10px] text-text-disabled">Joined</span>
-        </div>
-      </div>
-
-      {/* Volume */}
-      <div className="mb-4 flex items-center justify-between rounded-lg border border-border-subtle bg-surface-2 px-3 py-2 text-[11px]">
-        <span className="text-text-disabled">Est. Monthly Volume</span>
-        <span className="num-mono font-bold text-text-secondary">{profile.volumeRange}</span>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-2">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between border-b border-border-ghost px-4 py-2.5">
+        <span className="text-[12px] font-semibold text-text-secondary">Profile</span>
         <button
-          onClick={(e) => { e.stopPropagation(); setFollowing(v => !v); }}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-[12px] font-bold transition-colors ${
-            following
-              ? "border border-border-subtle bg-surface-2 text-text-secondary hover:bg-surface-3"
-              : "bg-primary text-text-inverse hover:bg-primary-strong"
-          }`}
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="text-text-disabled transition-colors hover:text-text-secondary"
         >
-          {following ? "Following ✓" : "Follow"}
+          <X size={13} />
         </button>
+      </div>
+
+      <div className="flex flex-col gap-0 px-4 pt-3 pb-4">
+
+        {/* ── Avatar + name + follow ── */}
+        <div className="mb-3 flex items-center gap-2.5">
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[14px] font-bold ${text}`}>
+            {profile.nickname[0].toUpperCase()}
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <p className="truncate text-[13px] font-bold text-text-primary">{profile.nickname}</p>
+            <p className={`text-[11px] font-semibold ${text}`}>
+              Lv.{profile.level} <span className="font-normal text-text-disabled">{getLevelName(profile.level)}</span>
+            </p>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); setFollowing(v => !v); }}
+            className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors ${
+              following
+                ? "border border-border-subtle bg-surface-2 text-text-secondary hover:bg-surface-3"
+                : "bg-accent-primary text-primary hover:bg-primary/20"
+            }`}
+          >
+            {following ? "Following" : "Follow"}
+          </button>
+        </div>
+
+        {/* ── XP bar ── */}
+        <div className="mb-3">
+          <div className="mb-1.5 flex items-center justify-between text-[10px]">
+            <span className="text-text-disabled">XP</span>
+            <span className={`num-mono font-semibold ${text}`}>{profile.xp.toLocaleString()} XP</span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{ width: `${pct}%`, background: `rgb(var(--color-primary-normal))` }}
+            />
+          </div>
+          <p className="mt-1 text-right text-[10px] text-text-disabled">
+            {profile.xp.toLocaleString()}/{profile.xpForNext.toLocaleString()} to next level
+          </p>
+        </div>
+
+        {/* ── Divider ── */}
+        <div className="mb-3 h-px bg-border-ghost" />
+
+        {/* ── Info rows — no outer box, dividers only ── */}
+        <div className="mb-3 flex flex-col">
+          {[
+            { label: "Joined",           value: profile.joinDate },
+            { label: "Est. Volume",      value: profile.volumeRange },
+            { label: "Posts",            value: String(profile.posts) },
+            { label: "Followers",        value: String(profile.followers) },
+          ].map(({ label, value }) => (
+            <div key={label} className="info-row">
+              <span className="info-row-label">{label}</span>
+              <span className="num-mono info-row-value text-[12px]">{value}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── View profile link ── */}
         <Link
           href={`/user/${profile.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border-subtle bg-surface-2 py-2 text-[12px] font-medium text-text-secondary transition-colors hover:bg-surface-3"
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border-subtle py-2 text-[12px] font-medium text-text-secondary transition-colors hover:border-primary/30 hover:bg-surface-2 hover:text-text-primary"
         >
           View Profile
         </Link>
@@ -778,10 +791,17 @@ function PostCard({
 
   return (
     <article
-      className={`group flex cursor-pointer flex-col gap-3 rounded-xl border p-4 transition-all hover:border-border-normal hover:bg-surface-1 ${
-        post.isBest ? "border-primary/25 bg-primary/4" : "border-border-ghost bg-background"
+      className={`group relative flex cursor-pointer flex-col gap-3 border-b border-border-ghost px-5 py-4 transition-colors last:border-b-0 ${
+        post.isBest ? "bg-primary/[0.035] hover:bg-primary/[0.06]" : "hover:bg-surface-2/40"
       }`}
     >
+      {post.isBest && (
+        <span
+          className="absolute left-0 top-0 h-full w-[2px] bg-primary"
+          aria-hidden="true"
+        />
+      )}
+
       {/* ── Top meta row ── */}
       <div className="flex flex-wrap items-center gap-2">
         {post.isBest && (
@@ -796,7 +816,7 @@ function PostCard({
         )}
 
         <CategoryBadge category={post.category} />
-        <span className="h-3 w-px bg-border-subtle" aria-hidden />
+        <span className="h-3 w-px bg-border-ghost" aria-hidden />
 
         <AuthorButton
           author={post.author}
@@ -947,7 +967,7 @@ function WriteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           {/* Level restriction warning */}
           {isRestricted && (
             <div className="flex items-start gap-2.5 rounded-lg border border-amber-400/30 bg-amber-400/8 px-3.5 py-3">
-              <span className="mt-0.5 text-base">⚠️</span>
+              <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-400" />
               <div className="flex flex-col gap-0.5">
                 <p className="text-[12px] font-bold text-amber-400">Level Restriction</p>
                 <p className="text-[12px] text-text-secondary leading-relaxed">
@@ -968,7 +988,7 @@ function WriteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
               onClick={() => setShowCatDrop(v => !v)}
               className="flex w-full items-center justify-between rounded-lg border border-border-subtle bg-surface-2 px-3 py-2.5 text-[13px] font-medium text-text-primary transition-colors hover:bg-surface-3"
             >
-              <span>{CATEGORY_META[category].emoji} {CATEGORY_META[category].label}</span>
+              <span className="flex items-center gap-1.5">{CATEGORY_ICON[category]} {CATEGORY_META[category].label}</span>
               <ChevronDown size={14} className={`text-text-tertiary transition-transform ${showCatDrop ? "rotate-180" : ""}`} />
             </button>
             {showCatDrop && (
@@ -988,7 +1008,7 @@ function WriteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        <span>{meta.emoji}</span> {meta.label}
+                        {CATEGORY_ICON[key]} {meta.label}
                       </span>
                       {locked && <span className="text-[10px] text-amber-400/70">Lv.6+</span>}
                     </button>
@@ -1175,7 +1195,7 @@ function CategorySidebar({
 }) {
   return (
     <aside className="flex w-[200px] shrink-0 flex-col gap-1">
-      <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-widest text-text-disabled">Categories</p>
+      <p className="section-label mb-2 px-3">Categories</p>
 
       <button
         onClick={() => onChange("all")}
@@ -1196,23 +1216,23 @@ function CategorySidebar({
           }`}
         >
           <span className="flex items-center gap-2">
-            <span className="text-[14px] leading-none">{meta.emoji}</span>
+            <span className="text-text-disabled">{CATEGORY_ICON[key]}</span>
             <span className="leading-none">{meta.label}</span>
           </span>
           <span className="num-mono text-[11px] text-text-disabled">{counts[key]}</span>
         </button>
       ))}
 
-      <div className="my-2 h-px bg-border-ghost" />
+      <div className="my-3 divider-ghost" />
 
-      <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-widest text-text-disabled">My Activity</p>
+      <p className="section-label mb-2 px-3">My Activity</p>
       {["My Posts", "Saved Posts"].map(label => (
         <button key={label} className="rounded-lg px-3 py-2 text-left text-[13px] text-text-disabled transition-colors hover:bg-surface-1 hover:text-text-secondary">
           {label}
         </button>
       ))}
 
-      <div className="my-2 h-px bg-border-ghost" />
+      <div className="my-3 divider-ghost" />
 
       <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-text-disabled">
         <Users size={13} />
@@ -1232,52 +1252,67 @@ function HotSidebar({ posts }: { posts: Post[] }) {
     .slice(0, 5);
 
   return (
-    <aside className="flex w-[256px] shrink-0 flex-col gap-5">
-      <div className="rounded-xl border border-border-subtle bg-surface-1 p-4">
-        <h3 className="mb-3 flex items-center gap-1.5 text-[12px] font-bold text-text-primary">
-          <Flame size={13} className="text-orange-400" /> Hot Posts
-        </h3>
-        <div className="flex flex-col gap-3">
-          {hotPosts.map((p, i) => (
-            <div key={p.id} className="group flex cursor-pointer gap-2">
-              <span className={`num-mono mt-0.5 w-4 shrink-0 text-[11px] font-bold ${
-                i === 0 ? "text-primary" : i === 1 ? "text-text-secondary" : "text-text-disabled"
-              }`}>
-                {i + 1}
-              </span>
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <p className="line-clamp-2 text-[12px] font-medium leading-snug text-text-secondary transition-colors group-hover:text-text-primary">
-                  {p.title}
-                </p>
-                <div className="flex items-center gap-2 text-[11px] text-text-disabled">
-                  <span className="num-mono">👍 {p.likes}</span>
-                  <span>·</span>
-                  <span>{p.timeAgo}</span>
+    <aside className="w-[240px] shrink-0">
+      <div className="panel">
+
+        {/* Hot Posts */}
+        <div className="panel-section">
+          <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-disabled">
+            <Flame size={12} className="text-orange-400" /> Hot Posts
+          </h3>
+          <div className="flex flex-col">
+            {hotPosts.map((p, i) => (
+              <div
+                key={p.id}
+                className="group flex cursor-pointer gap-2.5 py-2"
+                style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
+              >
+                <span className={`num-mono mt-0.5 w-4 shrink-0 text-[11px] font-bold ${
+                  i === 0 ? "text-primary" : "text-text-disabled"
+                }`}>
+                  {i + 1}
+                </span>
+                <div className="flex min-w-0 flex-col gap-1">
+                  <p className="line-clamp-2 text-[12px] font-medium leading-snug text-text-secondary transition-colors group-hover:text-text-primary">
+                    {p.title}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-[11px] text-text-disabled">
+                    <ThumbsUp size={10} />
+                    <span className="num-mono">{p.likes}</span>
+                    <span className="text-border-ghost">·</span>
+                    <span>{p.timeAgo}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-xl border border-border-subtle bg-surface-1 p-4">
-        <h3 className="mb-3 flex items-center gap-1.5 text-[12px] font-bold text-text-primary">
-          <TrendingUp size={13} className="text-primary" /> Trending Tickers
-        </h3>
-        <div className="flex flex-col gap-2">
-          {TRENDING_TICKERS.map(t => (
-            <div key={t.symbol} className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-2">
-              <span className="text-[12px] font-bold text-primary">{t.symbol}</span>
-              <div className="flex items-center gap-2 text-right">
-                <span className="num-mono text-[12px] font-semibold text-text-secondary">${t.price.toLocaleString()}</span>
-                <span className={`num-mono flex items-center gap-0.5 text-[11px] font-bold ${t.change >= 0 ? "text-positive" : "text-negative"}`}>
-                  {t.change >= 0 ? <ArrowUp size={9} /> : <ArrowDown size={9} />}
-                  {Math.abs(t.change).toFixed(2)}%
-                </span>
+        {/* Trending Tickers */}
+        <div className="panel-section">
+          <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-disabled">
+            <TrendingUp size={12} className="text-primary" /> Trending
+          </h3>
+          <div className="flex flex-col">
+            {TRENDING_TICKERS.map((t, i) => (
+              <div
+                key={t.symbol}
+                className="flex cursor-pointer items-center justify-between py-1.5 transition-colors hover:opacity-80"
+                style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
+              >
+                <span className="text-[12px] font-bold text-primary">{t.symbol}</span>
+                <div className="flex items-center gap-2">
+                  <span className="num-mono text-[12px] text-text-secondary">${t.price.toLocaleString()}</span>
+                  <span className={`num-mono flex items-center gap-0.5 text-[11px] font-bold ${t.change >= 0 ? "text-positive" : "text-negative"}`}>
+                    {t.change >= 0 ? <ArrowUp size={8} /> : <ArrowDown size={8} />}
+                    {Math.abs(t.change).toFixed(2)}%
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
       </div>
     </aside>
   );
@@ -1371,91 +1406,97 @@ export default function CommunityPage() {
           {/* ── Main feed ── */}
           <main className="flex min-w-0 flex-1 flex-col gap-4">
 
-            {/* Feed tabs + controls */}
-            <div className="flex items-center gap-3">
-              <div className="flex rounded-xl bg-surface-1 p-[3px] gap-[3px]">
-                {TABS.map(t => (
+            {/* Unified toolbar */}
+            <div className="panel">
+              <div className="flex items-center gap-3 px-3 py-2.5">
+                <div className="flex gap-[2px]">
+                  {TABS.map(t => (
+                    <button
+                      key={t.key}
+                      onClick={() => setTab(t.key)}
+                      className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                        tab === t.key
+                          ? "bg-surface-3 font-bold text-text-primary"
+                          : "text-text-disabled hover:text-text-tertiary"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                <span className="h-5 w-px bg-border-ghost" aria-hidden />
+
+                <div className="flex flex-1 items-center gap-2 focus-within:text-text-primary">
+                  <Search size={13} className="shrink-0 text-text-disabled" />
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search by keyword, $ticker, or nickname…"
+                    className="flex-1 bg-transparent text-[13px] text-text-primary outline-none placeholder:text-text-disabled"
+                  />
+                </div>
+
+                <span className="h-5 w-px bg-border-ghost" aria-hidden />
+
+                <div className="relative">
                   <button
-                    key={t.key}
-                    onClick={() => setTab(t.key)}
-                    className={`rounded-lg px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
-                      tab === t.key
-                        ? "bg-surface-3 font-bold text-text-primary"
-                        : "text-text-disabled hover:text-text-tertiary"
-                    }`}
+                    onClick={() => setShowSortDrop(v => !v)}
+                    className="flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
                   >
-                    {t.label}
+                    {currentSortLabel}
+                    <ChevronDown size={12} className={`transition-transform ${showSortDrop ? "rotate-180" : ""}`} />
                   </button>
-                ))}
-              </div>
+                  {showSortDrop && (
+                    <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-xl border border-border-subtle bg-surface-2 py-1 shadow-xl">
+                      {SORTS.map(s => (
+                        <button
+                          key={s.key}
+                          onClick={() => { setSortBy(s.key); setShowSortDrop(false); }}
+                          className={`flex w-full items-center px-3 py-2 text-[13px] transition-colors hover:bg-surface-3 ${
+                            sortBy === s.key ? "font-bold text-text-primary" : "text-text-secondary"
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-border-subtle bg-surface-1 px-3 py-2 focus-within:border-primary/30 transition-colors">
-                <Search size={13} className="shrink-0 text-text-disabled" />
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search by keyword, $ticker, or nickname…"
-                  className="flex-1 bg-transparent text-[13px] text-text-primary outline-none placeholder:text-text-disabled"
-                />
-              </div>
-
-              <div className="relative">
                 <button
-                  onClick={() => setShowSortDrop(v => !v)}
-                  className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-border-subtle bg-surface-1 px-3 py-2 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary"
+                  onClick={() => setShowWrite(true)}
+                  className="flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-[13px] font-bold text-text-inverse transition-colors hover:bg-primary-strong"
                 >
-                  {currentSortLabel}
-                  <ChevronDown size={12} className={`transition-transform ${showSortDrop ? "rotate-180" : ""}`} />
+                  <Pencil size={13} />
+                  Write
                 </button>
-                {showSortDrop && (
-                  <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-xl border border-border-subtle bg-surface-2 py-1 shadow-xl">
-                    {SORTS.map(s => (
-                      <button
-                        key={s.key}
-                        onClick={() => { setSortBy(s.key); setShowSortDrop(false); }}
-                        className={`flex w-full items-center px-3 py-2 text-[13px] transition-colors hover:bg-surface-3 ${
-                          sortBy === s.key ? "font-bold text-text-primary" : "text-text-secondary"
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
-              <button
-                onClick={() => setShowWrite(true)}
-                className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-[13px] font-bold text-text-inverse transition-colors hover:bg-primary-strong"
-              >
-                <Pencil size={13} />
-                Write
-              </button>
+              {/* Hot period filter — shown only when tab === "hot" */}
+              {tab === "hot" && (
+                <div className="flex items-center gap-2 border-t border-border-ghost px-5 py-2.5">
+                  <span className="text-[11px] uppercase tracking-wider text-text-disabled">Period</span>
+                  {HOT_PERIODS.map(p => (
+                    <button
+                      key={p.key}
+                      onClick={() => setHotPeriod(p.key)}
+                      className={`rounded-full px-3 py-1 text-[12px] font-medium transition-colors ${
+                        hotPeriod === p.key
+                          ? "bg-primary text-text-inverse"
+                          : "text-text-secondary hover:bg-surface-2"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-
-            {/* Hot period filter — shown only when tab === "hot" */}
-            {tab === "hot" && (
-              <div className="flex items-center gap-2">
-                <span className="text-[12px] text-text-disabled">Period:</span>
-                {HOT_PERIODS.map(p => (
-                  <button
-                    key={p.key}
-                    onClick={() => setHotPeriod(p.key)}
-                    className={`rounded-full px-3 py-1 text-[12px] font-medium transition-colors ${
-                      hotPeriod === p.key
-                        ? "bg-primary text-text-inverse"
-                        : "border border-border-subtle bg-surface-1 text-text-secondary hover:bg-surface-2"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            )}
 
             {/* Following empty state */}
             {tab === "following" ? (
-              <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border-subtle bg-surface-1 py-24 text-center">
+              <div className="panel flex flex-col items-center justify-center gap-4 py-24 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-2">
                   <Bell size={24} className="text-text-disabled" />
                 </div>
@@ -1474,34 +1515,32 @@ export default function CommunityPage() {
               <>
                 {/* Best posts */}
                 {bestPosts.length > 0 && tab !== "hot" && (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <Gem size={13} className="text-primary" />
-                      <span className="text-[12px] font-bold text-primary">Best Posts</span>
-                      <span className="text-[11px] text-text-disabled">— 50+ likes</span>
+                  <div className="panel">
+                    <div className="flex items-center gap-2 border-b border-border-ghost px-5 py-3">
+                      <Gem size={12} className="text-primary" />
+                      <span className="section-label text-primary">Best Posts</span>
+                      <span className="text-[10px] text-text-disabled">— 50+ likes</span>
                     </div>
                     {bestPosts.map(p => (
                       <PostCard key={p.id} post={p} onLike={handleLike} onReport={setReportPostId} />
                     ))}
-                    {regularPosts.length > 0 && (
-                      <div className="flex items-center gap-3 py-1">
-                        <div className="h-px flex-1 bg-border-ghost" />
-                        <span className="text-[11px] text-text-disabled">Latest Posts</span>
-                        <div className="h-px flex-1 bg-border-ghost" />
-                      </div>
-                    )}
                   </div>
                 )}
 
                 {/* Regular / hot list */}
                 {(tab === "hot" ? filtered : regularPosts).length > 0 ? (
-                  <div className="flex flex-col gap-2">
+                  <div className="panel">
+                    {bestPosts.length > 0 && tab !== "hot" && (
+                      <div className="flex items-center gap-2 border-b border-border-ghost px-5 py-3">
+                        <span className="section-label">Latest Posts</span>
+                      </div>
+                    )}
                     {(tab === "hot" ? filtered : regularPosts).map(p => (
                       <PostCard key={p.id} post={p} onLike={handleLike} onReport={setReportPostId} />
                     ))}
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border-subtle bg-surface-1 py-20 text-center">
+                ) : bestPosts.length === 0 && (
+                  <div className="panel flex flex-col items-center justify-center gap-3 py-20 text-center">
                     <MessageSquare size={32} className="text-text-disabled" />
                     <p className="text-[14px] font-medium text-text-tertiary">No posts yet</p>
                     <p className="text-[12px] text-text-disabled">Be the first to post</p>

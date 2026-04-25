@@ -162,12 +162,85 @@
   /* ── Card ────────────────────────────────────────────────────────────────── */
   .card {
     @apply rounded-2xl border border-border-subtle bg-surface-1;
-    transition: transform var(--duration-base) var(--ease-out-smooth),
-                box-shadow var(--duration-base) var(--ease-out-smooth);
+    transition: box-shadow var(--duration-base) var(--ease-out-smooth);
   }
   .card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 0 0 1px rgba(202, 255, 93, 0.12);
+    box-shadow: 0 0 0 1px rgba(202, 255, 93, 0.10);
+  }
+
+  /* ── Panel — unified container that replaces card clusters ─────────────────
+   * Rule: if 2+ related cards would stack together, wrap them in ONE .panel
+   * and use .panel-section for internal grouping. Reduces visual fragmentation.
+   * ────────────────────────────────────────────────────────────────────────── */
+  .panel {
+    @apply rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden;
+  }
+  .panel-head {
+    @apply flex items-center justify-between px-5 py-4;
+  }
+  .panel-body {
+    @apply px-5 pb-5;
+  }
+  .panel-section {
+    @apply px-5 py-4;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .panel-section:first-child {
+    border-top: 0;
+  }
+  /* Compact panel-section for data-dense views */
+  .panel-section-sm {
+    @apply px-4 py-3;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .panel-section-sm:first-child {
+    border-top: 0;
+  }
+  .section-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-text-disabled;
+  }
+
+  /* ── Stat tile (borderless, typography-driven) ───────────────────────────── */
+  .stat-tile {
+    @apply flex flex-col gap-1.5;
+  }
+  .stat-tile-label {
+    @apply text-[10px] font-medium uppercase tracking-wider text-text-disabled;
+  }
+  .stat-tile-value {
+    @apply num-mono text-[15px] font-bold leading-none text-text-primary;
+  }
+
+  /* ── List row — bottom ghost divider, no card wrap ───────────────────────── */
+  .list-row {
+    @apply flex flex-col gap-3 py-4 transition-colors;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .list-row:last-child {
+    border-bottom: 0;
+  }
+  .list-row:hover {
+    background: rgba(38, 38, 38, 0.4);
+  }
+
+  /* ── Info row — label + value pair with no outer box ─────────────────────── */
+  .info-row {
+    @apply flex items-center justify-between py-2 text-[12px];
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .info-row:last-child {
+    border-bottom: 0;
+  }
+  .info-row-label {
+    @apply text-text-disabled;
+  }
+  .info-row-value {
+    @apply font-semibold text-text-primary;
+  }
+
+  /* ── Subtle card — bg only, no border; use for nested data blocks ─────────── */
+  .data-block {
+    @apply rounded-lg bg-surface-2/50 px-3 py-2.5;
   }
 
   /* ── Magnetic card (JS-driven, see component) ────────────────────────────── */

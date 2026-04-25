@@ -132,46 +132,46 @@ export function GNB() {
           </span>
         </Link>
 
-        <span className="hidden flex-shrink-0 rounded-full border border-border-subtle bg-surface-2 px-3 py-1 text-xs font-semibold text-text-primary sm:block">
+        <span className="hidden flex-shrink-0 items-center rounded-full border border-border-subtle px-2.5 py-[3px] text-[10px] font-semibold uppercase tracking-[0.1em] text-text-disabled sm:flex">
           Terminal
         </span>
 
-        <span className="hidden h-4 w-px flex-shrink-0 bg-border-subtle sm:block" aria-hidden="true" />
+        <span className="hidden h-4 w-px flex-shrink-0 bg-border-ghost sm:block" aria-hidden="true" />
 
         {/* ── Nav ─────────────────────────────────────────────────────── */}
-        <nav className="hidden flex-1 items-center gap-1 md:flex" aria-label="Main navigation">
-          {NAV_LINKS.map(({ href, label }) => {
-            const isActive = pathname === href || pathname.startsWith(href + "/");
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={[
-                  "relative rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors focus-ring",
-                  isActive
-                    ? "text-text-primary"
-                    : "text-text-tertiary hover:text-text-secondary",
-                ].join(" ")}
-                aria-current={isActive ? "page" : undefined}
-              >
-                {label}
-                {isActive && (
-                  <span className="absolute inset-x-3.5 bottom-0 h-px bg-primary" aria-hidden="true" />
-                )}
-              </Link>
-            );
-          })}
+        <nav className="hidden flex-1 items-center md:flex" aria-label="Main navigation">
+          <div className="flex items-center gap-0.5 rounded-full border border-border-subtle/60 bg-surface-1/60 p-[3px]">
+            {NAV_LINKS.map(({ href, label }) => {
+              const isActive = pathname === href || pathname.startsWith(href + "/");
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={[
+                    "relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 focus-ring",
+                    isActive
+                      ? "bg-surface-2 text-text-primary shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
+                      : "text-text-disabled hover:text-text-secondary",
+                  ].join(" ")}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {label}
+                  {isActive && (
+                    <span className="absolute bottom-[4px] left-1/2 h-[2px] w-4 -translate-x-1/2 rounded-full bg-primary" aria-hidden="true" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
         <div className="flex-1 md:hidden" />
 
         {/* ── Right actions ────────────────────────────────────────────── */}
-        <div className="flex flex-shrink-0 items-center gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2.5">
 
           {/* Live rebate chip */}
           <RebateChip amount={MOCK_REBATE_TODAY} />
-
-          <span className="hidden h-4 w-px bg-border-subtle sm:block" aria-hidden="true" />
 
           {/* Deposit */}
           <Link
@@ -185,17 +185,15 @@ export function GNB() {
             </svg>
           </Link>
 
-          <span className="hidden h-4 w-px bg-border-subtle sm:block" aria-hidden="true" />
+          <span className="hidden h-4 w-px bg-border-ghost sm:block" aria-hidden="true" />
 
           {/* Level avatar with XP ring */}
           <LevelAvatar level={MOCK_LEVEL} xp={MOCK_XP} xpForNext={MOCK_XP_NEXT} />
 
-          <span className="hidden h-4 w-px bg-border-subtle md:block" aria-hidden="true" />
-
           {/* Language */}
           <button
-            className="hidden cursor-pointer items-center gap-1.5 rounded-full border border-border-subtle px-3 py-1.5 text-xs
-              font-medium text-text-secondary transition-colors hover:border-border-normal hover:text-text-primary focus-ring md:flex"
+            className="hidden cursor-pointer items-center gap-1 rounded-full px-2 py-1.5 text-xs
+              font-medium text-text-tertiary transition-colors hover:bg-surface-2 hover:text-text-primary focus-ring md:flex"
             aria-label="Select language"
           >
             <Globe size={12} aria-hidden />
