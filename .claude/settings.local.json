@@ -30,7 +30,18 @@
       "mcp__c74936fe-5dcb-4b04-a72e-4301f14ff47e__get_metadata",
       "mcp__claude_ai_Figma__use_figma",
       "mcp__claude_ai_Figma__get_metadata",
+<<<<<<< HEAD
       "WebFetch(domain:www.figma.com)"
+=======
+      "Bash(npx skills:*)",
+      "mcp__plugin_figma_figma__get_design_context",
+      "mcp__plugin_figma_figma__get_screenshot",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/guide)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/guide)",
+      "Bash(npm install *)"
+>>>>>>> 67aaf6e (update)
     ]
   }
 }
