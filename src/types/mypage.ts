@@ -1,4 +1,4 @@
-// ─── 공통 타입 ────────────────────────────────────────────────────────────────
+// ─── Common Types ─────────────────────────────────────────────────────────────
 
 export type ExchangeId = "binance" | "bybit" | "okx" | "bitget" | string;
 
@@ -62,7 +62,7 @@ export interface OpenPosition {
 export interface OverviewData {
   summary: AssetSummary;
   connectedExchanges: ConnectedExchange[];
-  /** 최근 14일 잔고 히스토리 (sparkline용) */
+  /** Last 14 days balance history (for sparkline) */
   balanceHistory?: BalanceDataPoint[];
   openPositions?: OpenPosition[];
 }
@@ -75,33 +75,33 @@ export interface AssetPair {
   symbol: string;
   quantity: number;
   valueUsd: number;
-  /** 24시간 가격 변동률 (%) — API가 지원하는 경우에만 존재 */
+  /** 24-hour price change rate (%) — only present if API supports it */
   changePct24h?: number;
 }
 
-/** Futures 계정 전용 — 증거금 + 미실현 손익 */
+/** Futures account only — margin + unrealized P&L */
 export interface FuturesAssetPair extends AssetPair {
-  /** 미실현 손익 (USD) */
+  /** Unrealized P&L (USD) */
   unrealizedPnlUsd?: number;
-  /** 마진 방식 */
+  /** Margin type */
   marginType?: "cross" | "isolated";
 }
 
 export interface ExchangeAsset {
   exchangeId: ExchangeId;
   exchangeName: string;
-  /** 입출금 대기 잔고 */
+  /** Funding account balance */
   fundingAccount: AssetPair[];
   fundingTotalUsd: number;
-  /** 현물 거래 잔고 — 거래소에 따라 없을 수 있음 */
+  /** Spot trading balance — may not exist depending on exchange */
   spotAccount?: AssetPair[];
   spotTotalUsd?: number;
-  /** 선물(Perp) 증거금 잔고 — 거래소에 따라 없을 수 있음 */
+  /** Futures (Perp) margin balance — may not exist depending on exchange */
   futuresAccount?: FuturesAssetPair[];
   futuresTotalUsd?: number;
-  /** 거래소 API 연결 상태 */
+  /** Exchange API connection status */
   status?: ExchangeStatus;
-  /** 마지막 동기화 시각 (ISO 8601) */
+  /** Last sync time (ISO 8601) */
   lastSyncedAt?: string;
 }
 
@@ -163,7 +163,7 @@ export interface DepositHistoryItem {
 
 export type AccountType = "funding" | "spot" | "futures";
 
-/** 계좌 간 내부 이체 내역 (Funding ↔ Spot ↔ Futures) */
+/** Internal transfer history between accounts (Funding ↔ Spot ↔ Futures) */
 export interface TransferHistoryItem {
   id: string;
   exchangeId: ExchangeId;
@@ -176,7 +176,8 @@ export interface TransferHistoryItem {
 }
 
 /**
- * 출금 내역 — 터미널에서 출금 기능은 제공하지 않으며, 거래소에서 실행된 내역만 열람 가능
+ * Withdrawal history — Terminal does not provide withdrawal functionality;
+ * only records executed on the exchange can be viewed
  */
 export interface WithdrawHistoryItem {
   id: string;
@@ -194,7 +195,7 @@ export interface HistoryFilters {
   exchangeId?: ExchangeId | "all";
   startDate?: string;
   endDate?: string;
-  /** Trade History 전용 — spot / futures / all */
+  /** Trade History only — spot / futures / all */
   marketType?: MarketType | "all";
 }
 
@@ -210,7 +211,7 @@ export interface ExchangePnlBreakdown {
   exchangeName: string;
   pnlUsd: number;
   pnlPct: number;
-  /** 해당 거래소에서 발생한 예상 환급 수수료 (USD) */
+  /** Estimated fee rebate earned on this exchange (USD) */
   rebateUsd?: number;
 }
 
@@ -231,6 +232,6 @@ export interface ExchangeConnection {
   status: ExchangeStatus;
   connectedAt: string;
   apiKeyMasked: string;
-  /** 거래소 계정 UID */
+  /** Exchange account UID */
   uid?: string;
 }

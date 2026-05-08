@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Globe, ChevronDown } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
+import { getLevelInfo } from "@/lib/level";
 
 // ─── ReboundX Logo SVG ────────────────────────────────────────────────────────
 
@@ -16,24 +17,6 @@ function ReboundXMark({ size = 20 }: { size?: number }) {
       <path d="M7 10H11L13.5 13.5" stroke="#CAFF5D" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
-}
-
-// ─── Level helpers (mirrors CommunityChat getLevelStyle) ──────────────────────
-
-function getLevelColor(level: number): string {
-  if (level >= 91) return "#FBBF24"; // amber  – Legend
-  if (level >= 61) return "#A855F7"; // purple – Elite
-  if (level >= 31) return "#60A5FA"; // blue   – Pro
-  if (level >= 11) return "#22C55E"; // green  – Expert
-  return "#737373";                  // gray   – Trader
-}
-
-function getLevelName(level: number): string {
-  if (level >= 91) return "Legend";
-  if (level >= 61) return "Elite";
-  if (level >= 31) return "Pro";
-  if (level >= 11) return "Expert";
-  return "Trader";
 }
 
 // ─── Rebate Chip ─────────────────────────────────────────────────────────────
@@ -66,13 +49,13 @@ function LevelAvatar({
   xp: number;
   xpForNext: number;
 }) {
-  const color = getLevelColor(level);
+  const { color, title } = getLevelInfo(level);
   const pct   = Math.min(100, Math.round((xp / xpForNext) * 100));
 
   return (
     <Link
       href="/mypage/overview"
-      title={`Lv.${level} ${getLevelName(level)} — ${xp.toLocaleString()}/${xpForNext.toLocaleString()} XP`}
+      title={`Lv.${level} ${title} — ${xp.toLocaleString()}/${xpForNext.toLocaleString()} XP`}
       className="group relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full focus-ring"
       aria-label="My page"
     >

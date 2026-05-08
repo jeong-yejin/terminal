@@ -12,12 +12,12 @@ interface PositionHistoryTableProps {
 }
 
 /**
- * Position History 테이블 (Futures 전용)
+ * Position History table (Futures only)
  *
- * 컬럼:
+ * Columns:
  *   - Exchange / Symbol / Side / Entry / Exit
- *   - Realized P&L  (색상 강조)
- *   - ROE %         (realizedPnl ÷ notional × 100, 레버리지 미포함 근사)
+ *   - Realized P&L  (color-coded)
+ *   - ROE %         (realizedPnl ÷ notional × 100, approximate without leverage)
  *   - Est. Rebate
  *   - Closed At
  *   - Share         → PnlShareModal
@@ -90,7 +90,7 @@ interface PositionRowProps {
 function PositionRow({ row, onShare }: PositionRowProps) {
   const pnlPositive = row.realizedPnlUsd >= 0;
 
-  // ROE = realizedPnl / notional × 100 (레버리지 미포함 근사)
+  // ROE = realizedPnl / notional × 100 (approximate without leverage)
   const notional = row.entryPrice * row.quantity;
   const roe = notional > 0 ? (row.realizedPnlUsd / notional) * 100 : 0;
   const roePositive = roe >= 0;
@@ -107,7 +107,7 @@ function PositionRow({ row, onShare }: PositionRowProps) {
       <td className="px-4 py-3 tabular-nums text-text-secondary">{formatUsd(row.entryPrice)}</td>
       <td className="px-4 py-3 tabular-nums text-text-secondary">{formatUsd(row.exitPrice)}</td>
 
-      {/* Realized P&L — 핵심 수치, 강조 */}
+      {/* Realized P&L — key figure, highlighted */}
       <td className={`px-4 py-3 font-semibold tabular-nums ${pnlPositive ? "text-positive" : "text-negative"}`}>
         {pnlPositive ? "+" : ""}{formatUsd(row.realizedPnlUsd)}
       </td>
@@ -126,7 +126,7 @@ function PositionRow({ row, onShare }: PositionRowProps) {
         {new Date(row.closedAt).toLocaleDateString()}
       </td>
 
-      {/* Share — row hover 시 노출 */}
+      {/* Share — visible on row hover */}
       <td className="px-4 py-3">
         <button
           onClick={onShare}

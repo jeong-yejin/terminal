@@ -7,6 +7,8 @@ import {
   ThumbsUp, MessageCircle, Bookmark, Briefcase, MessageSquare, Bell,
 } from "lucide-react";
 import { getMockProfile, getLeaderboardEntry } from "@/lib/mock-users";
+import { getLevelInfo } from "@/lib/level";
+import { LevelBadge } from "@/components/LevelBadge";
 
 // ─── Post types & mock data ───────────────────────────────────────────────────
 
@@ -25,29 +27,29 @@ interface UserPost {
 }
 
 const CATEGORY_META: Record<PostCategory, { label: string; icon: React.ReactNode }> = {
-  journal: { label: "Trading Journal", icon: <Briefcase size={11} /> },
-  free:    { label: "Free Board",      icon: <MessageSquare size={11} /> },
-  news:    { label: "Info & News",     icon: <Bell size={11} /> },
+  journal: { label: "Trading Journal",    icon: <Briefcase size={11} /> },
+  free:    { label: "General Discussion", icon: <MessageSquare size={11} /> },
+  news:    { label: "News & Insights",    icon: <Bell size={11} /> },
 };
 
 const USER_POSTS: Record<string, UserPost[]> = {
   u3: [
-    { id: "u3p1", category: "journal", title: "BTC Long 50x +23% 진입 근거 정리", preview: "89,200 지지 확인 후 롱 진입. 50배 레버리지지만 진입가 기준 손절 0.5%로 리스크 관리 철저히 했습니다.", timeAgo: "Apr 23", likes: 218, comments: 47, scraps: 31, tickers: ["BTCUSDT"] },
-    { id: "u3p2", category: "journal", title: "SOL Long +22% 리캡 — 기술적 분석 복기", preview: "142 지지 확인 후 롱. 피보나치 0.618 되돌림 구간에서 분할 매수, 목표가 167 달성 후 전량 정리.", timeAgo: "Apr 13", likes: 134, comments: 29, scraps: 18, tickers: ["SOLUSDT"] },
-    { id: "u3p3", category: "free", title: "비트코인 장기 홀더 온체인 데이터 분석", preview: "LTH SOPR 지표가 1.0 이하로 내려온 구간은 역사적으로 강력한 매수 시그널이었습니다. 현재 수치 공유합니다.", timeAgo: "Apr 10", likes: 302, comments: 65, scraps: 84, tickers: ["BTCUSDT"] },
-    { id: "u3p4", category: "news", title: "ETF 자금 유입 데이터 — 주간 브리핑", preview: "이번 주 BTC ETF 순유입 $1.2B 기록. 기관 수요 지속되는 중. 가격 지지력 유지될 가능성 높음.", timeAgo: "Apr 7", likes: 189, comments: 38, scraps: 52, tickers: ["BTCUSDT"] },
+    { id: "u3p1", category: "journal", title: "BTC Long 50x +23% — Entry Rationale", preview: "Entered long after confirming 89,200 support. 50x leverage but managed risk with 0.5% stop from entry.", timeAgo: "Apr 23", likes: 218, comments: 47, scraps: 31, tickers: ["BTCUSDT"] },
+    { id: "u3p2", category: "journal", title: "SOL Long +22% Recap — Technical Analysis Review", preview: "Long after confirming 142 support. Scaled in at Fibonacci 0.618 retracement, closed full position at target 167.", timeAgo: "Apr 13", likes: 134, comments: 29, scraps: 18, tickers: ["SOLUSDT"] },
+    { id: "u3p3", category: "free", title: "Bitcoin Long-Term Holder On-Chain Data Analysis", preview: "Historically, LTH SOPR dropping below 1.0 has been a strong buy signal. Sharing current figures here.", timeAgo: "Apr 10", likes: 302, comments: 65, scraps: 84, tickers: ["BTCUSDT"] },
+    { id: "u3p4", category: "news", title: "ETF Flow Data — Weekly Briefing", preview: "BTC ETF net inflow of $1.2B this week. Institutional demand continues. Price support likely to hold.", timeAgo: "Apr 7", likes: 189, comments: 38, scraps: 52, tickers: ["BTCUSDT"] },
   ],
   u1: [
-    { id: "u1p1", category: "journal", title: "BTC 20x Long +12% — 92,400 진입 회고", preview: "지지선 재확인 후 롱 진입. 목표가 94,800에서 1/2 정리, 나머지는 트레일링 스탑으로 대응했습니다.", timeAgo: "Apr 22", likes: 98, comments: 21, scraps: 14, tickers: ["BTCUSDT"] },
-    { id: "u1p2", category: "free", title: "펀딩비 음수 구간에서 숏 잡는 전략 공유", preview: "펀딩비가 -0.05% 이하일 때 숏 포지션 진입하면 이자 수익까지 챙길 수 있습니다.", timeAgo: "Apr 18", likes: 61, comments: 13, scraps: 18, tickers: ["ETHUSDT", "BTCUSDT"] },
-    { id: "u1p3", category: "news", title: "연준 FOMC 발언 분석 — 크립토 단기 영향", preview: "파월 의장 비둘기파 발언 이후 BTC 3% 상승. 매크로 환경은 여전히 불확실합니다.", timeAgo: "Apr 14", likes: 89, comments: 21, scraps: 32, tickers: ["BTCUSDT"] },
+    { id: "u1p1", category: "journal", title: "BTC 20x Long +12% — 92,400 Entry Recap", preview: "Entered long after re-confirming support. Closed 1/2 at target 94,800, trailed stop on the rest.", timeAgo: "Apr 22", likes: 98, comments: 21, scraps: 14, tickers: ["BTCUSDT"] },
+    { id: "u1p2", category: "free", title: "Strategy: Shorting During Negative Funding Rates", preview: "When funding rate drops below -0.05%, entering a short position can earn you the funding fee on top of the trade.", timeAgo: "Apr 18", likes: 61, comments: 13, scraps: 18, tickers: ["ETHUSDT", "BTCUSDT"] },
+    { id: "u1p3", category: "news", title: "Fed FOMC Statement Analysis — Short-Term Impact on Crypto", preview: "BTC up 3% after Powell's dovish remarks. Macro environment remains uncertain.", timeAgo: "Apr 14", likes: 89, comments: 21, scraps: 32, tickers: ["BTCUSDT"] },
   ],
   u4: [
-    { id: "u4p1", category: "journal", title: "ETH Long +8.1% — 2,450 지지 확인 후 진입", preview: "이더리움 2,450 구간 지지 확인 후 롱. 목표가 2,650에서 전량 정리, 계획대로 실행한 깔끔한 트레이드.", timeAgo: "Apr 21", likes: 34, comments: 8, scraps: 6, tickers: ["ETHUSDT"] },
-    { id: "u4p2", category: "free", title: "초보자를 위한 레버리지 리스크 관리 가이드", preview: "1회 트레이드에 계좌의 1% 이상 손실 나지 않도록 포지션 사이즈 계산하는 방법을 정리했습니다.", timeAgo: "Apr 16", likes: 127, comments: 34, scraps: 45, tickers: [] },
+    { id: "u4p1", category: "journal", title: "ETH Long +8.1% — Entry After Confirming 2,450 Support", preview: "Entered long after ETH confirmed 2,450 support. Closed full position at target 2,650 — clean execution as planned.", timeAgo: "Apr 21", likes: 34, comments: 8, scraps: 6, tickers: ["ETHUSDT"] },
+    { id: "u4p2", category: "free", title: "Leverage Risk Management Guide for Beginners", preview: "How to calculate position size so a single trade never loses more than 1% of your account.", timeAgo: "Apr 16", likes: 127, comments: 34, scraps: 45, tickers: [] },
   ],
   u2: [
-    { id: "u2p1", category: "journal", title: "SOL 숏 포지션 리뷰 — 고점 잡기의 어려움", preview: "145 고점에서 숏 진입 시도했으나 추가 상승으로 손절. 고점 매도는 역추세 전략이라 리스크가 크다는 걸 다시 배웠습니다.", timeAgo: "Apr 19", likes: 23, comments: 9, scraps: 4, tickers: ["SOLUSDT"] },
+    { id: "u2p1", category: "journal", title: "SOL Short Position Review — The Difficulty of Shorting Tops", preview: "Tried to short at the 145 top but stopped out on continued upside. Learned again how risky counter-trend selling at highs can be.", timeAgo: "Apr 19", likes: 23, comments: 9, scraps: 4, tickers: ["SOLUSDT"] },
   ],
 };
 
@@ -57,21 +59,6 @@ function getPostsForUser(userId: string, nickname: string): UserPost[] {
 
 // ─── Level helpers ────────────────────────────────────────────────────────────
 
-function getLevelColor(level: number): string {
-  if (level >= 91) return "#FBBF24";
-  if (level >= 61) return "#A855F7";
-  if (level >= 31) return "#60A5FA";
-  if (level >= 11) return "#22C55E";
-  return "#737373";
-}
-
-function getLevelName(level: number): string {
-  if (level >= 91) return "Legend";
-  if (level >= 61) return "Elite";
-  if (level >= 31) return "Pro";
-  if (level >= 11) return "Expert";
-  return "Trader";
-}
 
 // ─── Stat tile — borderless; dividers come from the panel ─────────────────────
 
@@ -220,8 +207,7 @@ export function UserProfilePage({ userId }: { userId: string }) {
     );
   }
 
-  const levelColor = getLevelColor(profile.level);
-  const levelName = getLevelName(profile.level);
+  const { color: levelColor } = getLevelInfo(profile.level);
   const xpInLevel = profile.xp % 1000;
   const userPosts = getPostsForUser(profile.id, profile.nickname);
 
@@ -273,16 +259,14 @@ export function UserProfilePage({ userId }: { userId: string }) {
                 </div>
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
+                    <img src={getLevelInfo(profile.level).badge} alt="" aria-hidden className="h-[18px] w-[18px] shrink-0" />
                     <span className="text-[16px] font-bold text-text-primary">{profile.nickname}</span>
                     {profile.isReferral && (
                       <span className="rounded bg-primary/20 px-1 py-0.5 text-[9px] font-bold text-primary">R</span>
                     )}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[12px] font-bold" style={{ color: levelColor }}>
-                      Lv.{profile.level}
-                    </span>
-                    <span className="text-[11px] text-text-disabled">· {levelName}</span>
+                    <LevelBadge level={profile.level} />
                     {lbEntry && (
                       <>
                         <span className="text-[11px] text-text-disabled">·</span>

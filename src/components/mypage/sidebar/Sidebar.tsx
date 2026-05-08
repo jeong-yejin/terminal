@@ -24,7 +24,7 @@ export function Sidebar() {
       />
       <SidebarNav />
 
-      {/* 하단 푸터 */}
+      {/* Bottom footer */}
       <div className="mt-auto w-full border-t border-border-subtle px-4 py-4 flex flex-col items-center">
         <Link
           href="/"

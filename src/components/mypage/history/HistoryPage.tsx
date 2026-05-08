@@ -18,18 +18,18 @@ import { usePerformance } from "@/hooks/usePerformance";
 import type { HistoryFilters } from "@/types/mypage";
 
 /**
- * History 페이지
+ * History page
  *
  * Tier 1 — Section:
- *   - Trade History    → 거래 내역 (order / trade / position)
- *   - Transaction History → 에셋 내역 (deposit / transfer / withdraw)
+ *   - Trade History    → trade records (order / trade / position)
+ *   - Transaction History → asset records (deposit / transfer / withdraw)
  *
  * Tier 2 — Tab:
  *   Trade:       Order History | Trade History | Position History
  *   Transaction: Deposit History | Transfer History | Withdraw History
- *                (Withdraw는 읽기 전용 — 실제 출금은 거래소에서 실행)
+ *                (Withdraw is read-only — actual withdrawals are executed on the exchange)
  *
- * 공통 필터: 거래소, 기간 (startDate ~ endDate)
+ * Shared filters: exchange, date range (startDate ~ endDate)
  */
 export function HistoryPage() {
   const [activeSection, setActiveSection] = useState<HistorySection>("trade");
@@ -48,7 +48,7 @@ export function HistoryPage() {
         tab={activeTab}
         onSectionChange={(s) => {
           setActiveSection(s);
-          // 섹션 전환 시 marketType 필터 초기화
+          // reset marketType filter on section change
           setFilters((prev) => ({ ...prev, marketType: "all" }));
         }}
         onTabChange={setActiveTab}
@@ -56,12 +56,12 @@ export function HistoryPage() {
 
       <HistoryFiltersBar section={activeSection} value={filters} onChange={setFilters} />
 
-      {/* ── Trade 섹션 전용: P&L 차트 ── */}
+      {/* ── Trade section only: P&L chart ── */}
       {activeSection === "trade" && (
         <PnlChart data={perfData?.pnlChart} isLoading={perfLoading} />
       )}
 
-      {/* ── Trade History 탭패널 ── */}
+      {/* ── Trade History tab panels ── */}
       {activeTab === "order" && (
         <OrderHistoryTable filters={filters} />
       )}
@@ -72,7 +72,7 @@ export function HistoryPage() {
         <PositionHistoryTable filters={filters} />
       )}
 
-      {/* ── Transaction History 탭패널 ── */}
+      {/* ── Transaction History tab panels ── */}
       {activeTab === "deposit" && (
         <DepositHistoryTable filters={filters} />
       )}

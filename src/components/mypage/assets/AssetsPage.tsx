@@ -207,10 +207,10 @@ export function AssetsPage() {
                       />
                     </Link>
 
-                    {/* ── Action buttons — 링크와 별도 영역으로 분리 (WCAG 1.3.1, 2.4.6) ── */}
+                    {/* ── Action buttons — separate area from the link (WCAG 1.3.1, 2.4.6) ── */}
                     <div className="flex-shrink-0 flex items-center gap-1.5">
 
-                      {/* Transfer — 서비스 내부 (계좌 간 이체) */}
+                      {/* Transfer — in-service (between accounts) */}
                       <Link
                         href={`/mypage/history?section=transaction&tab=transfer&exchange=${exchange.exchangeId}`}
                         onClick={(e) => e.stopPropagation()}
@@ -223,7 +223,7 @@ export function AssetsPage() {
                         <ArrowLeftRight size={14} aria-hidden />
                       </Link>
 
-                      {/* Withdraw — 거래소 외부 처리 (external link) */}
+                      {/* Withdraw — handled externally on the exchange (external link) */}
                       <a
                         href={getWithdrawUrl(exchange.exchangeId)}
                         target="_blank"
@@ -241,7 +241,7 @@ export function AssetsPage() {
                         <ExternalLink size={10} className="text-text-tertiary" aria-hidden />
                       </a>
 
-                      {/* Deposit — 서비스 내부 (primary CTA) */}
+                      {/* Deposit — in-service (primary CTA) */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

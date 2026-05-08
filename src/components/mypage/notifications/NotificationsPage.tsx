@@ -10,6 +10,7 @@ import {
   CheckCheck,
   Flame,
 } from "lucide-react";
+import { getLevelInfo } from "@/lib/level";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,13 +30,6 @@ interface Notification {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getLevelColor(level: number): string {
-  if (level >= 91) return "#fbbf24";
-  if (level >= 61) return "#c084fc";
-  if (level >= 31) return "#60a5fa";
-  if (level >= 11) return "#CAFF5D";
-  return "#737373";
-}
 
 const TYPE_CONFIG: Record<NotifType, { icon: React.ElementType; color: string; label: string }> = {
   like:         { icon: ThumbsUp,      color: "#CAFF5D", label: "Like"       },
@@ -58,48 +52,48 @@ const FILTER_TABS: { key: NotifFilter; label: string }[] = [
 const MOCK_NOTIFS: Notification[] = [
   {
     id: "n1", type: "like", actor: "CryptoWhale88", actorLevel: 72,
-    message: "님이 내 글을 좋아합니다.",
-    context: "\"BTC Long +18% 진입 근거 정리\"",
+    message: "liked your post.",
+    context: "\"BTC Long +18% Entry Analysis\"",
     timeAgo: "5m ago", read: false,
   },
   {
     id: "n2", type: "comment", actor: "BTCmaxi", actorLevel: 91,
-    message: "님이 내 글에 댓글을 달았습니다.",
-    context: "\"펀딩비 음수 구간에서 숏 잡는 전략 — 동의합니다. 여기에 청산가 이탈 시 리커버리...\"",
+    message: "commented on your post.",
+    context: "\"Shorting negative funding rate zones — agreed. When price breaks liquidation level, recovery strategy...\"",
     timeAgo: "22m ago", read: false,
   },
   {
     id: "n3", type: "follow", actor: "SolanaKing", actorLevel: 45,
-    message: "님이 나를 팔로우하기 시작했습니다.",
+    message: "started following you.",
     timeAgo: "1h ago", read: false,
   },
   {
     id: "n4", type: "chat_mention", actor: "TradeGuru_KR", actorLevel: 33,
-    message: "님이 채팅에서 나를 언급했습니다.",
-    context: "@You BTC 지금 진입 어떻게 봐요?",
+    message: "mentioned you in chat.",
+    context: "@You What do you think about entering BTC now?",
     timeAgo: "2h ago", read: true,
   },
   {
     id: "n5", type: "like", actor: "MarketOracle", actorLevel: 55,
-    message: "님이 내 댓글을 좋아합니다.",
-    context: "\"레버리지 낮게 가져가고 손절 명확히 세팅하면...\"",
+    message: "liked your comment.",
+    context: "\"Keep leverage low and set a clear stop loss...\"",
     timeAgo: "3h ago", read: true,
   },
   {
     id: "n6", type: "reply", actor: "BTCmaxi", actorLevel: 91,
-    message: "님이 내 댓글에 답글을 달았습니다.",
-    context: "\"맞습니다. 여기에 청산가 이탈 시 리커버리 전략도 중요합니다.\"",
+    message: "replied to your comment.",
+    context: "\"Exactly. Recovery strategy when price breaks the liquidation level is also important.\"",
     timeAgo: "5h ago", read: true,
   },
   {
     id: "n7", type: "follow", actor: "CryptoWhale88", actorLevel: 72,
-    message: "님이 나를 팔로우하기 시작했습니다.",
+    message: "started following you.",
     timeAgo: "1d ago", read: true,
   },
   {
     id: "n8", type: "like", actor: "NewbieTrader", actorLevel: 3,
-    message: "님이 내 글을 좋아합니다.",
-    context: "\"연준 FOMC 발언 분석 — 크립토 시장 단기 영향\"",
+    message: "liked your post.",
+    context: "\"Fed FOMC Statement Analysis — Short-Term Impact on Crypto\"",
     timeAgo: "2d ago", read: true,
   },
 ];
@@ -108,7 +102,7 @@ const MOCK_NOTIFS: Notification[] = [
 
 function NotifItem({ notif, onMarkRead }: { notif: Notification; onMarkRead: (id: string) => void }) {
   const { icon: Icon, color } = TYPE_CONFIG[notif.type];
-  const actorColor = getLevelColor(notif.actorLevel);
+  const actorColor = getLevelInfo(notif.actorLevel).color;
 
   return (
     <div
@@ -160,8 +154,8 @@ function EmptyState() {
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-2">
         <Bell size={20} className="text-text-disabled" />
       </div>
-      <p className="text-[13px] text-text-secondary">알림이 없습니다.</p>
-      <p className="text-[12px] text-text-disabled">커뮤니티 활동이 늘어나면 알림을 받게 됩니다.</p>
+      <p className="text-[13px] text-text-secondary">No notifications.</p>
+      <p className="text-[12px] text-text-disabled">You will receive notifications as you engage with the community.</p>
     </div>
   );
 }
@@ -194,7 +188,7 @@ export function NotificationsPage() {
               </span>
             )}
           </div>
-          <p className="mt-1 text-[13px] text-text-secondary">커뮤니티 및 채팅 활동 알림</p>
+          <p className="mt-1 text-[13px] text-text-secondary">Community and chat activity notifications</p>
         </div>
         {unreadCount > 0 && (
           <button
@@ -203,7 +197,7 @@ export function NotificationsPage() {
             aria-label="Mark all notifications as read"
           >
             <CheckCheck size={13} />
-            모두 읽음
+            Mark all read
           </button>
         )}
       </div>
@@ -266,7 +260,7 @@ export function NotificationsPage() {
         <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
           <Flame size={14} className="text-primary flex-shrink-0" />
           <p className="text-[12px] text-text-secondary">
-            커뮤니티에 글을 쓰거나 채팅에 참여하면 더 많은 알림을 받을 수 있습니다.
+            Post in the community or join chat to receive more notifications.
           </p>
         </div>
       )}

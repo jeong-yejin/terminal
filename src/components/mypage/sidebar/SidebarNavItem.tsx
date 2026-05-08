@@ -13,17 +13,17 @@ interface SidebarNavItemProps {
 }
 
 /**
- * 사이드바 개별 메뉴 아이템
+ * Sidebar individual menu item
  *
- * 상태별 스타일:
+ * State styles:
  *   - default  : text-text-secondary, icon color-icon-secondary
  *   - hover    : bg-surface-2/60, text-text-primary
  *   - active   : bg-surface-2, text-text-primary, left border 2px color-primary
- *   - focus    : outline-2 outline-offset-2 outline-primary (키보드 접근성)
+ *   - focus    : outline-2 outline-offset-2 outline-primary (keyboard accessibility)
  *
- * 접근성:
- *   - aria-current="page" 활성 페이지 표시
- *   - 아이콘 aria-hidden="true" (라벨 텍스트로 충분)
+ * Accessibility:
+ *   - aria-current="page" marks active page
+ *   - icon aria-hidden="true" (label text is sufficient)
  */
 export function SidebarNavItem({
   href,
@@ -40,7 +40,7 @@ export function SidebarNavItem({
         href={href}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          // w-full + 좌우 패딩으로 edge-to-edge 하이라이트, rounded 제거
+          // w-full + horizontal padding for edge-to-edge highlight, no rounded
           "group relative flex h-14 w-full items-center gap-3 px-4 text-sm font-medium transition-colors",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
           isActive

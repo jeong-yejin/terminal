@@ -2,22 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Flag, Heart, ChevronDown, X, AlertCircle } from "lucide-react";
-import { MOCK_PROFILES } from "@/lib/mock-users";
+import { LevelBadge } from "@/components/LevelBadge";
+import { getLevelInfo } from "@/lib/level";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Channel = "global" | "korean";
-
-const EMOJI_REACTIONS = [
-  { key: "🚀", label: "Bullish" },
-  { key: "💀", label: "Bearish" },
-  { key: "🔥", label: "Hot" },
-  { key: "💎", label: "Diamond" },
-  { key: "👀", label: "Watch" },
-  { key: "😂", label: "Lol" },
-] as const;
-
-type EmojiKey = (typeof EMOJI_REACTIONS)[number]["key"];
 
 export type SharedPosition = {
   symbol: string;
@@ -37,7 +27,6 @@ type ChatMessage = {
   isReferral: boolean;
   content: string;
   timestamp: Date;
-  reactions: Partial<Record<EmojiKey, string[]>>;
   likes: string[];
   positionCard?: SharedPosition;
   type: "text" | "position";
@@ -64,12 +53,12 @@ type ReportCategory = (typeof REPORT_CATEGORIES)[number];
 
 
 const INITIAL_MESSAGES: ChatMessage[] = [
-  { id: "m1", userId: "u3", nickname: "BTCmaxi",      level: 91, isReferral: false, content: "BTC holding 94k support nicely. Bulls in control", timestamp: new Date(Date.now() - 8*60000), reactions: { "🚀": ["u1","u2"] }, likes: ["u1","u4","u5"], type: "text", channel: "global" },
-  { id: "m2", userId: "u1", nickname: "CryptoWhale88",level: 72, isReferral: false, content: "SOL could drop to 120. Be careful.",                 timestamp: new Date(Date.now() - 7*60000), reactions: { "💀": ["u3"] },       likes: [],              type: "text", channel: "korean" },
-  { id: "m3", userId: "u2", nickname: "SolanaKing",   level: 45, isReferral: true,  content: "ETH breakout incoming. Load the bags.",              timestamp: new Date(Date.now() - 5*60000), reactions: { "💎": ["u1","u3","u4"]}, likes: ["u1"],          type: "text", channel: "global" },
-  { id: "m4", userId: "u2", nickname: "SolanaKing",   level: 45, isReferral: true,  content: "",                                                   timestamp: new Date(Date.now() - 3*60000), reactions: { "🚀": ["u1","u3"], "💎": ["u4"] }, likes: ["u1","u3","u5"], type: "position", channel: "global", positionCard: { symbol: "ETHUSD", side: "Long", leverage: 10, entryPrice: 3200, currentPrice: 3350, unrealizedPnl: 468.75, unrealizedPct: 4.69 } },
-  { id: "m5", userId: "u4", nickname: "TradeGuru_KR", level: 33, isReferral: true,  content: "If BTC breaks 95k I think we hit 100k.",             timestamp: new Date(Date.now() - 2*60000), reactions: {},                   likes: [],              type: "text", channel: "korean" },
-  { id: "m6", userId: "u5", nickname: "DiaHands",     level:  8, isReferral: false, content: "Just entered my first BTC position! Excited",        timestamp: new Date(Date.now() -   60000), reactions: { "👀": ["u1"] },      likes: ["u2"],          type: "text", channel: "global" },
+  { id: "m1", userId: "u3", nickname: "BTCmaxi",      level: 91, isReferral: false, content: "BTC holding 94k support nicely. Bulls in control", timestamp: new Date(Date.now() - 8*60000), likes: ["u1","u4","u5"], type: "text", channel: "global" },
+  { id: "m2", userId: "u1", nickname: "CryptoWhale88",level: 72, isReferral: false, content: "SOL could drop to 120. Be careful.",                 timestamp: new Date(Date.now() - 7*60000), likes: [],              type: "text", channel: "korean" },
+  { id: "m3", userId: "u2", nickname: "SolanaKing",   level: 45, isReferral: true,  content: "ETH breakout incoming. Load the bags.",              timestamp: new Date(Date.now() - 5*60000), likes: ["u1"],          type: "text", channel: "global" },
+  { id: "m4", userId: "u2", nickname: "SolanaKing",   level: 45, isReferral: true,  content: "",                                                   timestamp: new Date(Date.now() - 3*60000), likes: ["u1","u3","u5"], type: "position", channel: "global", positionCard: { symbol: "ETHUSD", side: "Long", leverage: 10, entryPrice: 3200, currentPrice: 3350, unrealizedPnl: 468.75, unrealizedPct: 4.69 } },
+  { id: "m5", userId: "u4", nickname: "TradeGuru_KR", level: 33, isReferral: true,  content: "If BTC breaks 95k I think we hit 100k.",             timestamp: new Date(Date.now() - 2*60000), likes: [],              type: "text", channel: "korean" },
+  { id: "m6", userId: "u5", nickname: "DiaHands",     level:  8, isReferral: false, content: "Just entered my first BTC position! Excited",        timestamp: new Date(Date.now() -   60000), likes: ["u2"],          type: "text", channel: "global" },
 ];
 
 const MOCK_INCOMING = [
@@ -82,27 +71,6 @@ const MOCK_INCOMING = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getLevelStyle(level: number) {
-  if (level >= 91) return { text: "text-amber-400",   glow: true,  bg: "bg-amber-400",   ring: "ring-amber-400/40" };
-  if (level >= 61) return { text: "text-purple-400",  glow: false, bg: "bg-purple-400",  ring: "ring-purple-400/30" };
-  if (level >= 31) return { text: "text-blue-400",    glow: false, bg: "bg-blue-400",    ring: "ring-blue-400/30" };
-  if (level >= 11) return { text: "text-positive",    glow: false, bg: "bg-positive",    ring: "ring-positive/30" };
-  return                  { text: "text-text-disabled",glow: false, bg: "bg-text-disabled",ring: "ring-transparent" };
-}
-
-function LevelBadge({ level, isReferral }: { level: number; isReferral: boolean }) {
-  const { text, glow } = getLevelStyle(level);
-  return (
-    <span className="flex items-center gap-0.5">
-      <span className={`text-[10px] font-bold leading-none ${text} ${glow ? "drop-shadow-[0_0_5px_rgba(251,191,36,0.9)]" : ""}`}>
-        Lv.{level}
-      </span>
-      {isReferral && (
-        <span className="ml-0.5 rounded bg-primary/20 px-0.5 text-[9px] font-bold text-primary">R</span>
-      )}
-    </span>
-  );
-}
 
 function fmtTime(d: Date) {
   return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
@@ -194,41 +162,28 @@ function ReportModal({ onClose }: { onClose: () => void }) {
 
 // ─── Message Item ─────────────────────────────────────────────────────────────
 
-function MessageItem({ msg, myUserId, onReact, onLike, onReport, onProfileClick }: {
+function MessageItem({ msg, myUserId, onLike, onReport, onProfileClick }: {
   msg: ChatMessage;
   myUserId: string;
-  onReact: (msgId: string, emoji: EmojiKey) => void;
   onLike: (msgId: string) => void;
   onReport: (msgId: string) => void;
   onProfileClick: (userId: string) => void;
 }) {
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [hoveredEmoji, setHoveredEmoji]       = useState<EmojiKey | null>(null);
-  const pickerRef = useRef<HTMLDivElement>(null);
-
   const isHighlighted = msg.likes.length >= HIGHLIGHT_THRESHOLD;
   const iLiked        = msg.likes.includes(myUserId);
-  const { text: levelText, glow } = getLevelStyle(msg.level);
-
-  useEffect(() => {
-    if (!showEmojiPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setShowEmojiPicker(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showEmojiPicker]);
-
-  const reactionsEntries = Object.entries(msg.reactions) as [EmojiKey, string[]][];
+  const { color } = getLevelInfo(msg.level);
 
   return (
     <div className={`group relative px-3 py-1.5 transition-colors hover:bg-surface-2/50 ${isHighlighted ? "border-l-2 border-primary bg-primary/5" : ""}`}>
       <div className="flex items-center gap-1.5">
+        <img src={getLevelInfo(msg.level).badge} alt="" aria-hidden className="h-[14px] w-[14px] shrink-0" />
         <button onClick={() => onProfileClick(msg.userId)}
-          className={`text-[11px] font-semibold hover:underline ${levelText} ${glow ? "drop-shadow-[0_0_5px_rgba(251,191,36,0.9)]" : ""}`}>
+          className="text-[11px] font-semibold hover:underline"
+          style={{ color }}>
           {msg.nickname}
         </button>
-        <LevelBadge level={msg.level} isReferral={msg.isReferral} />
+        <LevelBadge level={msg.level} />
+        {msg.isReferral && <span className="rounded bg-primary/20 px-0.5 text-[9px] font-bold text-primary">R</span>}
         <span className="ml-auto shrink-0 text-[10px] text-text-disabled">{fmtTime(msg.timestamp)}</span>
       </div>
 
@@ -237,49 +192,17 @@ function MessageItem({ msg, myUserId, onReact, onLike, onReport, onProfileClick 
       )}
       {msg.type === "position" && msg.positionCard && <PositionCardDisplay card={msg.positionCard} />}
 
-      {(reactionsEntries.some(([, u]) => u.length > 0) || msg.likes.length > 0) && (
+      {msg.likes.length > 0 && (
         <div className="mt-1.5 flex flex-wrap items-center gap-1">
-          {reactionsEntries.map(([emoji, users]) => {
-            if (!users.length) return null;
-            const iReacted = users.includes(myUserId);
-            return (
-              <div key={emoji} className="relative">
-                <button onClick={() => onReact(msg.id, emoji)}
-                  onMouseEnter={() => setHoveredEmoji(emoji)} onMouseLeave={() => setHoveredEmoji(null)}
-                  className={`flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[11px] transition-colors ${iReacted ? "border-primary/50 bg-primary/10 text-primary" : "border-border-subtle bg-surface-2 text-text-secondary hover:border-primary/30"}`}>
-                  {emoji}<span className="text-[10px] tabular-nums">{users.length}</span>
-                </button>
-                {hoveredEmoji === emoji && (
-                  <div className="absolute bottom-full left-0 z-30 mb-1 whitespace-nowrap rounded-lg border border-border-subtle bg-surface-3 px-2 py-1 text-[10px] text-text-secondary shadow-xl">
-                    {users.map(id => MOCK_PROFILES[id]?.nickname ?? id).join(", ")}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          {msg.likes.length > 0 && (
-            <button onClick={() => onLike(msg.id)}
-              className={`flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[11px] transition-colors ${iLiked ? "border-red-500/50 bg-red-500/10 text-red-400" : "border-border-subtle bg-surface-2 text-text-disabled hover:text-red-400"}`}>
-              ❤<span className="text-[10px] tabular-nums">{msg.likes.length}</span>
-            </button>
-          )}
+          <button onClick={() => onLike(msg.id)}
+            className={`flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[11px] transition-colors ${iLiked ? "border-red-500/50 bg-red-500/10 text-red-400" : "border-border-subtle bg-surface-2 text-text-disabled hover:text-red-400"}`}>
+            ❤<span className="text-[10px] tabular-nums">{msg.likes.length}</span>
+          </button>
         </div>
       )}
 
       {/* Hover actions */}
       <div className="absolute right-2 top-1 hidden items-center gap-0.5 rounded-lg border border-border-subtle bg-surface-2 px-0.5 py-0.5 shadow-lg group-hover:flex">
-        <div className="relative" ref={pickerRef}>
-          <button onClick={() => setShowEmojiPicker((v) => !v)}
-            className="rounded p-1 text-[12px] text-text-disabled hover:bg-surface-3 hover:text-text-secondary">😊</button>
-          {showEmojiPicker && (
-            <div className="absolute bottom-full right-0 z-40 mb-1 flex gap-0.5 rounded-lg border border-border-subtle bg-surface-2 p-1.5 shadow-2xl">
-              {EMOJI_REACTIONS.map(({ key, label }) => (
-                <button key={key} onClick={() => { onReact(msg.id, key); setShowEmojiPicker(false); }} title={label}
-                  className="rounded p-1 text-[15px] transition-colors hover:bg-surface-3">{key}</button>
-              ))}
-            </div>
-          )}
-        </div>
         <button onClick={() => onLike(msg.id)} title="Like"
           className={`rounded p-1 transition-colors ${iLiked ? "text-red-400" : "text-text-disabled hover:bg-surface-3 hover:text-red-400"}`}>
           <Heart size={11} />
@@ -341,7 +264,7 @@ export function CommunityChat({
     let i = 0;
     const timer = setInterval(() => {
       const mock = MOCK_INCOMING[i % MOCK_INCOMING.length];
-      setMessages((prev) => [...prev, { id: `ws-${Date.now()}-${i}`, ...mock, timestamp: new Date(), reactions: {}, likes: [], type: "text" }]);
+      setMessages((prev) => [...prev, { id: `ws-${Date.now()}-${i}`, ...mock, timestamp: new Date(), likes: [], type: "text" }]);
       i++;
     }, 9000);
     return () => clearInterval(timer);
@@ -376,7 +299,7 @@ export function CommunityChat({
     processedRevs.current.add(positionShare.rev);
     setMessages((prev) => [...prev, {
       id: `pos-${Date.now()}`, userId: MY_USER_ID, nickname: MY_NICKNAME, level: MY_LEVEL,
-      isReferral: false, content: "", timestamp: new Date(), reactions: {}, likes: [],
+      isReferral: false, content: "", timestamp: new Date(), likes: [],
       type: "position", channel, positionCard: positionShare.pos,
     }]);
   }, [positionShare, channel]);
@@ -386,15 +309,6 @@ export function CommunityChat({
     if (el) el.scrollTop = el.scrollHeight;
     setNewMsgCount(0);
   };
-
-  const handleReact = useCallback((msgId: string, emoji: EmojiKey) => {
-    setMessages((prev) => prev.map((m) => {
-      if (m.id !== msgId) return m;
-      const cur     = m.reactions[emoji] ?? [];
-      const updated = cur.includes(MY_USER_ID) ? cur.filter((id) => id !== MY_USER_ID) : [...cur, MY_USER_ID];
-      return { ...m, reactions: { ...m.reactions, [emoji]: updated } };
-    }));
-  }, []);
 
   const handleLike = useCallback((msgId: string) => {
     setMessages((prev) => prev.map((m) => {
@@ -424,7 +338,7 @@ export function CommunityChat({
     recentContent.current = [...recentContent.current.slice(-20), { content: trimmed, time: now }];
     setMessages((prev) => [...prev, {
       id: `m-${++msgCounter.current}`, userId: MY_USER_ID, nickname: MY_NICKNAME, level: MY_LEVEL,
-      isReferral: false, content: trimmed, timestamp: new Date(), reactions: {}, likes: [], type: "text", channel,
+      isReferral: false, content: trimmed, timestamp: new Date(), likes: [], type: "text", channel,
     }]);
     setInput("");
   };
@@ -466,7 +380,7 @@ export function CommunityChat({
         )}
         {filteredMessages.map((msg) => (
           <MessageItem key={msg.id} msg={msg} myUserId={MY_USER_ID}
-            onReact={handleReact} onLike={handleLike}
+            onLike={handleLike}
             onReport={(id) => setReportMsgId(id)}
             onProfileClick={(id) => onProfileClick?.(id)} />
         ))}

@@ -21,8 +21,6 @@ const KEYFRAMES = `
    Replace EXCHANGE_* with /public/guide/logo-*.svg once available.
    Step screenshots: /public/guide/step-1.png … step-4.png (auto-fallback below)
 ─────────────────────────────────────────────────────────────────────────────── */
-const FALLBACK_SCREEN =
-  "https://www.figma.com/api/mcp/asset/29e6405d-d0a9-46a1-9ea7-d772c3e6c274";
 const EXCHANGE_BYBIT =
   "https://www.figma.com/api/mcp/asset/b1441352-506c-4df9-9410-9a8e2c59e38f";
 const EXCHANGE_OKX =
@@ -200,14 +198,8 @@ function StepScreenshot({ stepNum, title }: { stepNum: number; title: string }) 
   return (
     <div className="relative flex-1 min-w-0 min-h-0 rounded-[18px] border border-white/[0.08] bg-[#07080A] overflow-hidden shadow-[0_0_40px_20px_rgba(255,255,255,0.02)]">
       <img
-        src={`/guide/step-${stepNum}.png`}
+        src={`/guide/Asset/Step-${stepNum}.webp`}
         alt={`${title} screenshot`}
-        onError={(e) => {
-          if (!e.currentTarget.dataset.fallback) {
-            e.currentTarget.dataset.fallback = "1";
-            e.currentTarget.src = FALLBACK_SCREEN;
-          }
-        }}
         className="absolute inset-0 w-full h-full object-cover object-left-top"
       />
       {/* Glass edge refraction */}
@@ -220,25 +212,22 @@ function StepScreenshot({ stepNum, title }: { stepNum: number; title: string }) 
 function StepCard({
   step,
   isActive,
-  onClick,
+  onActivate,
 }: {
   step: Step;
   isActive: boolean;
-  onClick: () => void;
+  onActivate: () => void;
 }) {
   return (
     <div
-      onClick={!isActive ? onClick : undefined}
-      role={!isActive ? "button" : undefined}
-      tabIndex={!isActive ? 0 : undefined}
-      onKeyDown={!isActive ? (e) => e.key === "Enter" && onClick() : undefined}
+      onMouseEnter={onActivate}
       className={[
         "relative overflow-hidden h-[368px] flex-shrink-0",
         "rounded-[32px] border",
         "transition-[border-color,box-shadow] duration-300",
         isActive
-          ? "border-primary/20 bg-surface-1 shadow-[0_0_48px_rgba(202,255,93,0.06)] cursor-default"
-          : "border-white/[0.12] bg-surface-1 cursor-pointer group hover:border-white/25 hover:shadow-[0_0_24px_rgba(255,255,255,0.03)]",
+          ? "border-primary/20 bg-surface-1 shadow-[0_0_48px_rgba(202,255,93,0.06)]"
+          : "border-white/[0.12] bg-surface-1 group",
       ].join(" ")}
     >
       {/* ── Active content ───────────────────────────────────────── */}
@@ -413,7 +402,7 @@ function TerminalUsageSection() {
             key={step.num}
             step={step}
             isActive={active === step.num}
-            onClick={() => setActive(step.num)}
+            onActivate={() => setActive(step.num)}
           />
         ))}
       </div>
@@ -471,39 +460,36 @@ function FaqItem({
 
 /* ── Benefit card ─────────────────────────────────────────────────────────── */
 function BenefitCard({ title, body }: { title: string; body: string }) {
-  const W = 357, H = 300, R = 32; // card dimensions + convex corner radius
-  const BTN = 64, PAD = 15;
-  const NR = BTN + PAD; // concave notch radius = 79px (= button size + margin)
-
-  // SVG clip-path: clockwise path with convex R corners (sweep=1)
-  // and one concave notch at TR (sweep=0 = counterclockwise = curves inward).
-  // Arc geometry: center at (W, 0) — the card's actual TR corner.
-  // This produces a perfect smooth quarter-circle notch with ZERO right angles.
-  const cardPath = [
-    `M ${R} 0`,
-    `L ${W - NR} 0`,                              // top edge → notch start
-    `A ${NR} ${NR} 0 0 0 ${W} ${NR}`,             // concave TR notch (CCW = inward)
-    `L ${W} ${H - R}`,                             // right edge
-    `A ${R} ${R} 0 0 1 ${W - R} ${H}`,            // BR convex corner
-    `L ${R} ${H}`,                                  // bottom edge
-    `A ${R} ${R} 0 0 1 0 ${H - R}`,               // BL convex corner
-    `L 0 ${R}`,                                     // left edge
-    `A ${R} ${R} 0 0 1 ${R} 0`,                   // TL convex corner
-    "Z",
-  ].join(" ");
+  // Matches Figma: circle 64px, 15px margin from card edge
+  const BTN = 64;
+  const PAD = 15;
+  const NOTCH = BTN + PAD; // 79px — area covered by the notch filler
 
   return (
-    <div className="group relative flex-shrink-0" style={{ width: W, height: H }}>
+    <div className="group relative w-[357px] h-[300px] flex-shrink-0">
 
-      {/* ── Card surface — shape defined entirely by clip-path ─────────────
-          No right angles anywhere. The concave notch arc (A NR NR 0 0 0)
-          uses sweep=0 (CCW) which curves the path inward, creating the
-          smooth bite at the top-right corner. ────────────────────────── */}
+      {/* ── Concave notch filler ─────────────────────────────────────────────
+          Same color as the parent section (bg-background = #0A0A0A).
+          Covers the card's rounded TR corner completely — card keeps
+          border-radius:32px on ALL corners so NO right angle is ever visible.
+          borderBottomLeftRadius = BTN(64px) makes the concave arc start at
+          exactly y=PAD(15px) from top and end at x=BTN+PAD(79px) from right,
+          tracing precisely around the circle button's bounding corners. ─── */}
       <div
-        className="absolute inset-0 z-0 p-8 flex flex-col justify-between
+        aria-hidden
+        className="absolute top-0 right-0 z-[2] bg-background pointer-events-none"
+        style={{
+          width: NOTCH + 1,           // 80px — fully covers 32px card TR radius
+          height: NOTCH + 1,          // 80px
+          borderBottomLeftRadius: BTN, // 64px — arc endpoints align with button edges
+        }}
+      />
+
+      {/* ── Card surface (all 4 corners rounded, NO right angles) ──────────── */}
+      <div
+        className="absolute inset-0 z-0 rounded-[32px] p-8 flex flex-col justify-between
                    bg-surface-1 group-hover:bg-primary
                    transition-colors duration-[380ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
-        style={{ clipPath: `path('${cardPath}')` }}
       >
         <span
           className="text-body-1 font-bold leading-snug whitespace-pre-line

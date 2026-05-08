@@ -3,22 +3,16 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { UserProfile } from "@/types/mypage";
+import { getLevelInfo } from "@/lib/level";
+import { LevelBadge } from "@/components/LevelBadge";
 
 type ProfileProps = Partial<Pick<UserProfile, "name" | "email" | "avatarUrl" | "level" | "xp" | "xpForNext" | "rank" | "followers" | "posts">>;
-
-function getLevelStyle(level: number) {
-  if (level >= 91) return { color: "#fbbf24", label: "Legend" };
-  if (level >= 61) return { color: "#c084fc", label: "Elite" };
-  if (level >= 31) return { color: "#60a5fa", label: "Pro" };
-  if (level >= 11) return { color: "#CAFF5D", label: "Expert" };
-  return { color: "#737373", label: "Trader" };
-}
 
 export function SidebarProfile({ name, email, avatarUrl, level = 1, xp = 0, xpForNext = 1000, rank, followers = 0, posts = 0 }: ProfileProps) {
   const [imgError, setImgError] = useState(false);
   const showInitials = !avatarUrl || imgError;
   const initial = name?.trim().charAt(0).toUpperCase() ?? "";
-  const { color, label } = getLevelStyle(level);
+  const { color } = getLevelInfo(level);
   const xpPct = Math.min(100, Math.round((xp / xpForNext) * 100));
 
   return (
@@ -59,12 +53,7 @@ export function SidebarProfile({ name, email, avatarUrl, level = 1, xp = 0, xpFo
 
         {/* Level badge */}
         <div className="mt-1 flex items-center justify-center gap-1.5">
-          <span
-            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
-            style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}
-          >
-            Lv.{level} {label}
-          </span>
+          <LevelBadge level={level} />
           {email && <span className="hidden" />}
         </div>
 

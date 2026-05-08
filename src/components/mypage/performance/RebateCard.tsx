@@ -10,10 +10,10 @@ interface RebateCardProps {
 }
 
 /**
- * 리베이트 요약 카드
- * ReboundX 핵심 가치: 수수료 환급액을 성과 맥락에서 노출
+ * Rebate summary card
+ * ReboundX core value: expose fee rebates in the context of performance
  *
- * ⚠️ 개발 확인 필요: 리베이트 데이터 연동 방식
+ * ⚠️ Dev confirmation needed: rebate data integration method
  */
 export function RebateCard({ totalReceived, estimated, totalFee, isLoading }: RebateCardProps) {
   if (isLoading) {

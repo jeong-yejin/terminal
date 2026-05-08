@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-/** 네트워크별 mock 입금 주소 (실서비스에서는 거래소 API 호출로 대체) */
+/** Mock deposit addresses by network (replaced by exchange API calls in production) */
 const MOCK_ADDRESSES: Record<string, string> = {
   TRC20: "TN86ydENrMwgwKdZjGgJDFPnP3MNcDHCVP",
   ERC20: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",

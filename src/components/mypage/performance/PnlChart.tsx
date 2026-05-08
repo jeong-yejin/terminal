@@ -29,15 +29,15 @@ interface PnlChartProps {
 }
 
 /**
- * P&L 라인 차트 (기간별)
+ * P&L line chart (by period)
  *
- * 라이브러리: recharts LineChart
- * 스펙:
- *   - 높이: 240px
- *   - X축: 날짜 (MM/DD), Y축: USD
- *   - 양수/음수 구간 색상 구분 (dot 없음)
- *   - 툴팁: 날짜 + P&L USD
- *   - 기간 필터 버튼: 1W / 1M / 3M / 1Y / ALL
+ * Library: recharts LineChart
+ * Spec:
+ *   - Height: 240px
+ *   - X-axis: date (MM/DD), Y-axis: USD
+ *   - Color-coded positive/negative zones (no dots)
+ *   - Tooltip: date + P&L USD
+ *   - Period filter buttons: 1W / 1M / 3M / 1Y / ALL
  */
 export function PnlChart({ data, isLoading }: PnlChartProps) {
   const [period, setPeriod] = useState<Period>("1M");

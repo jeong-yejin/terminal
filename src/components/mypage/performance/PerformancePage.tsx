@@ -7,16 +7,16 @@ import { RebateCard } from "./RebateCard";
 import { PerformanceTable } from "./PerformanceTable";
 
 /**
- * Performance 페이지
+ * Performance page
  *
- * ⚠️ 개발단 협의 필요:
- *   - 이전 거래에 대한 P&L 수치 API 제공 범위
- *   - 리베이트 데이터 연동 방식 (자체 계산 vs 거래소 API)
+ * ⚠️ Needs team alignment:
+ *   - API scope for P&L data on past trades
+ *   - Rebate data integration method (own calculation vs exchange API)
  *
- * 레이아웃:
- *   - 상단: PnlChart (기간별 총 P&L)
- *   - 중단 2열: ExchangePnlBar + RebateCard
- *   - 하단: PerformanceTable (성과 내역)
+ * Layout:
+ *   - Top: PnlChart (total P&L by period)
+ *   - Middle 2-col: ExchangePnlBar + RebateCard
+ *   - Bottom: PerformanceTable (performance breakdown)
  */
 export function PerformancePage() {
   const { data, isLoading } = usePerformance();

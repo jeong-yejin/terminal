@@ -10,14 +10,14 @@ interface DepositEntryPointProps {
 }
 
 /**
- * 입금 기능 진입점
+ * Deposit entry point
  *
- * 위치: Assets 페이지 헤더 우측
- * 동작: 선택된 거래소의 플랫폼 내 입금 모달 열기
- *       "All" 선택 시: 버튼 비활성화 + 툴팁 "거래소를 선택하세요"
+ * Location: top-right of the Assets page header
+ * Behavior: opens the in-platform deposit modal for the selected exchange
+ *           When "All" is selected: button disabled + tooltip "Select an exchange first"
  *
- * 스펙:
- *   - 크기: height 36px, padding px-3
+ * Spec:
+ *   - Size: height 36px, padding px-3
  *   - disabled: opacity-40, cursor-not-allowed
  */
 export function DepositEntryPoint({ exchangeId, exchangeName }: DepositEntryPointProps) {

@@ -19,7 +19,7 @@ interface ExchangePnlBarProps {
 }
 
 /**
- * 거래소별 P&L 비율 바 차트 (recharts BarChart — horizontal layout)
+ * P&L breakdown bar chart by exchange (recharts BarChart — horizontal layout)
  */
 export function ExchangePnlBar({ data, isLoading }: ExchangePnlBarProps) {
   if (isLoading) {

@@ -22,13 +22,13 @@ const STATUS_META: Record<
 };
 
 /**
- * My Exchanges — 연동 거래소 목록
+ * My Exchanges — connected exchange list
  *
- * 각 항목: logo · name · UID · status badge · connect / reconnect / disconnect CTA
+ * Each item: logo · name · UID · status badge · connect / reconnect / disconnect CTA
  *
- * 접근성:
+ * Accessibility:
  *   - role="list" / role="listitem"
- *   - 버튼에 aria-label (거래소명 포함)
+ *   - aria-label on buttons (includes exchange name)
  *   - confirm dialog before disconnect
  */
 export function ExchangeList({

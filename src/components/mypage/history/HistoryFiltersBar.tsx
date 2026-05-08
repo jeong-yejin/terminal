@@ -21,7 +21,7 @@ const MARKET_TYPE_OPTIONS: { id: MarketType | "all"; label: string }[] = [
  * Shared filter bar — used across all History tabs
  *
  * Filters:
- *   - Market Type chip (Spot / Futures / All) — Trade History 섹션 전용
+ *   - Market Type chip (Spot / Futures / All) — Trade History section only
  *   - Exchange (All + connected exchanges)
  *   - Date range: start ~ end (max 90 days)
  *   - Reset button
@@ -56,7 +56,7 @@ export function HistoryFiltersBar({ section, value, onChange }: HistoryFiltersBa
       role="group"
       aria-label="History filters"
     >
-      {/* Market Type chip — Trade 섹션 전용 */}
+      {/* Market Type chip — Trade section only */}
       {section === "trade" && (
         <div
           role="group"

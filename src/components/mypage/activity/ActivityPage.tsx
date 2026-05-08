@@ -67,34 +67,34 @@ const TABS: { key: ActivityTab; label: string; icon: React.ElementType }[] = [
 const MOCK_POSTS: MyPost[] = [
   {
     id: "p1", category: "journal",
-    title: "BTC Long +18% 진입 근거 정리",
-    preview: "91,200 지지 확인 후 롱 진입. 리스크 대비 수익 3:1로 세팅하고 포지션 절반 정리했습니다.",
+    title: "BTC Long +18% Entry Analysis",
+    preview: "Entered long after confirming 91,200 support. Set 3:1 risk/reward and closed half the position.",
     timeAgo: "2h ago", likes: 24, comments: 7, scraps: 5, tickers: ["BTCUSDT"],
   },
   {
     id: "p2", category: "free",
-    title: "펀딩비 음수 구간에서 숏 잡는 전략 공유",
-    preview: "펀딩비가 -0.05% 이하일 때 숏 포지션 진입하면 이자 수익까지 챙길 수 있습니다.",
+    title: "Strategy: Shorting During Negative Funding Rates",
+    preview: "When funding rate drops below -0.05%, entering a short position lets you earn the funding fee on top.",
     timeAgo: "1d ago", likes: 61, comments: 13, scraps: 18, tickers: ["ETHUSDT", "BTCUSDT"],
   },
   {
     id: "p3", category: "news",
-    title: "연준 FOMC 발언 분석 — 크립토 시장 단기 영향",
-    preview: "파월 의장 비둘기파 발언 이후 BTC 3% 상승. 매크로 환경은 여전히 불확실합니다.",
+    title: "Fed FOMC Statement Analysis — Short-Term Impact on Crypto",
+    preview: "BTC up 3% after Powell's dovish remarks. Macro environment remains uncertain.",
     timeAgo: "3d ago", likes: 89, comments: 21, scraps: 32, tickers: ["BTCUSDT"],
   },
 ];
 
 const MOCK_COMMENTS: MyComment[] = [
-  { id: "c1", postTitle: "솔라나 롱 잡아도 되나요?", content: "레버리지 낮게 가져가고 손절 명확히 세팅하면 괜찮을 것 같습니다. 지지선 $142 지켜주는지 확인하세요.", timeAgo: "30m ago", likes: 4 },
-  { id: "c2", postTitle: "바이빗 vs OKX 수수료 비교", content: "리베이트 감안하면 ReboundX 통해 거래하는 게 실제 순수익에서 유리합니다.", timeAgo: "5h ago", likes: 12 },
-  { id: "c3", postTitle: "BTC 94k 돌파 이후 시나리오", content: "이전 고점 저항 구간이라 분할 매도 전략이 맞는 것 같습니다. ATH 경신 시 추가 모멘텀 기대.", timeAgo: "2d ago", likes: 8 },
+  { id: "c1", postTitle: "Is it safe to long Solana?", content: "Should be fine if you keep leverage low and set a clear stop. Check if the $142 support holds.", timeAgo: "30m ago", likes: 4 },
+  { id: "c2", postTitle: "Bybit vs OKX Fee Comparison", content: "Factoring in rebates, trading through ReboundX is more favorable for actual net returns.", timeAgo: "5h ago", likes: 12 },
+  { id: "c3", postTitle: "Scenarios After BTC Breaks 94k", content: "Previous ATH resistance zone — scaling out makes sense here. Expect extra momentum if new ATH is set.", timeAgo: "2d ago", likes: 8 },
 ];
 
 const MOCK_SAVED: SavedPost[] = [
-  { id: "s1", category: "journal", title: "BTC 10× Long +34% 리캡 — 잘못된 진입에서 배운 것들", author: "CryptoWhale88", timeAgo: "Apr 22", likes: 218, comments: 47 },
-  { id: "s2", category: "free",    title: "레버리지 포지션에서 심리 관리하는 법", author: "BTCmaxi",         timeAgo: "Apr 20", likes: 134, comments: 29 },
-  { id: "s3", category: "news",    title: "ETF 승인 이후 크립토 시장 구조 변화 분석", author: "MarketOracle",   timeAgo: "Apr 18", likes: 302, comments: 65 },
+  { id: "s1", category: "journal", title: "BTC 10× Long +34% Recap — Lessons from a Bad Entry", author: "CryptoWhale88", timeAgo: "Apr 22", likes: 218, comments: 47 },
+  { id: "s2", category: "free",    title: "How to Manage Psychology in Leveraged Positions", author: "BTCmaxi",         timeAgo: "Apr 20", likes: 134, comments: 29 },
+  { id: "s3", category: "news",    title: "Crypto Market Structure Changes After ETF Approval", author: "MarketOracle",   timeAgo: "Apr 18", likes: 302, comments: 65 },
 ];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -181,9 +181,9 @@ function SavedCard({ post }: { post: SavedPost }) {
 
 function EmptyState({ tab }: { tab: ActivityTab }) {
   const config = {
-    posts:    { icon: MessageSquare, message: "아직 작성한 글이 없습니다.", action: "커뮤니티에 첫 글 쓰기", href: "/community" },
-    comments: { icon: MessageCircle, message: "작성한 댓글이 없습니다.", action: "커뮤니티 둘러보기", href: "/community" },
-    saved:    { icon: Bookmark,      message: "저장한 글이 없습니다.", action: "인기 글 보러가기", href: "/community" },
+    posts:    { icon: MessageSquare, message: "No posts yet.", action: "Write your first post", href: "/community" },
+    comments: { icon: MessageCircle, message: "No comments yet.", action: "Browse the community", href: "/community" },
+    saved:    { icon: Bookmark,      message: "No saved posts.", action: "See popular posts", href: "/community" },
   }[tab];
   const Icon = config.icon;
   return (
@@ -218,7 +218,7 @@ export function ActivityPage() {
       {/* Header */}
       <div>
         <h1 className="text-[22px] font-bold text-text-primary tracking-tight">Activity</h1>
-        <p className="mt-1 text-[13px] text-text-secondary">커뮤니티에서의 내 활동 내역</p>
+        <p className="mt-1 text-[13px] text-text-secondary">Your activity history in the community</p>
       </div>
 
       {/* Tab bar */}

@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * 거래소 선택 탭/드롭다운
+ * Exchange selector tab / dropdown
  *
- * 동작:
- *   - desktop(≥768px): 수평 탭 (All + 거래소 목록)
- *   - mobile(<768px): <select> 드롭다운
- *   - "All" 선택 시 전체 거래소 자산 합산 표시
+ * Behavior:
+ *   - desktop (≥768px): horizontal tabs (All + exchange list)
+ *   - mobile (<768px): <select> dropdown
+ *   - "All" shows combined assets across all exchanges
  *
- * 접근성:
+ * Accessibility:
  *   - role="tablist" / role="tab" / aria-selected
- *   - 키보드: ← → 화살표로 탭 이동
+ *   - Keyboard: ← → arrows to navigate tabs
  */
 
 interface ExchangeSelectorProps {

@@ -2,9 +2,11 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
+import { LevelBadge } from "@/components/LevelBadge";
+import { getLevelInfo } from "@/lib/level";
 import {
-  Pencil, ThumbsUp, ThumbsDown, MessageSquare, Bookmark, Flame, Gem,
-  ChevronDown, X, Search, TrendingUp, Users, Hash, Bell,
+  Pencil, ThumbsUp, ThumbsDown, MessageSquare, Bookmark, Flame,
+  ChevronDown, X, Search, TrendingUp, Users, Hash, Bell, Gem,
   ArrowUp, ArrowDown, UserCircle2, MoreHorizontal, Link2,
   Flag, Ban, Check, Image as ImageIcon, Briefcase, AlertTriangle,
 } from "lucide-react";
@@ -87,9 +89,21 @@ const MOCK_POSITION: PositionSnap = {
 // ─── Category metadata ───────────────────────────────────────────────────────
 
 const CATEGORY_META: Record<Exclude<Category, "all">, { label: string }> = {
-  journal: { label: "Trading Journal" },
-  free:    { label: "Free Board"      },
-  news:    { label: "Info & News"     },
+  journal: { label: "Trading Journal"    },
+  free:    { label: "General Discussion" },
+  news:    { label: "News & Insights"    },
+};
+
+const CATEGORY_COLORS: Record<Exclude<Category, "all">, { dot: string; text: string }> = {
+  journal: { dot: "#4ADE80", text: "#4ADE80" },
+  free:    { dot: "#2DD4BF", text: "#2DD4BF" },
+  news:    { dot: "#818CF8", text: "#818CF8" },
+};
+
+const WRITE_CATEGORY_ICON: Record<Exclude<Category, "all">, React.ReactNode> = {
+  journal: <Briefcase size={13} />,
+  free:    <MessageSquare size={13} />,
+  news:    <Bell size={13} />,
 };
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -217,39 +231,14 @@ const TRENDING_TICKERS = [
 
 // ─── Level style ──────────────────────────────────────────────────────────────
 
-function getLevelStyle(level: number) {
-  if (level >= 91) return { text: "text-amber-400",  bg: "bg-amber-400/10",  border: "border-amber-400/30" };
-  if (level >= 61) return { text: "text-purple-400", bg: "bg-purple-400/10", border: "border-purple-400/30" };
-  if (level >= 31) return { text: "text-blue-400",   bg: "bg-blue-400/10",   border: "border-blue-400/30"  };
-  if (level >= 11) return { text: "text-positive",   bg: "bg-positive/10",   border: "border-positive/30"  };
-  return              { text: "text-text-disabled", bg: "bg-surface-3",     border: "border-border-subtle" };
-}
-
-function getLevelName(level: number) {
-  if (level >= 91) return "Legend";
-  if (level >= 61) return "Elite";
-  if (level >= 31) return "Pro";
-  if (level >= 11) return "Expert";
-  return "Trader";
-}
-
-function LevelBadge({ level }: { level: number }) {
-  const { text } = getLevelStyle(level);
-  return <span className={`text-[10px] font-bold leading-none ${text}`}>Lv.{level}</span>;
-}
-
-const CATEGORY_ICON: Record<Exclude<Category, "all">, React.ReactNode> = {
-  journal: <Briefcase size={11} />,
-  free:    <MessageSquare size={11} />,
-  news:    <Bell size={11} />,
-};
 
 function CategoryBadge({ category }: { category: Exclude<Category, "all"> }) {
-  const meta = CATEGORY_META[category];
+  const { dot, text } = CATEGORY_COLORS[category];
+  const { label } = CATEGORY_META[category];
   return (
-    <span className="flex items-center gap-1 text-[11px] font-medium text-text-tertiary">
-      {CATEGORY_ICON[category]}
-      <span>{meta.label}</span>
+    <span className="flex items-center gap-1.5 px-1">
+      <span className="h-1 w-1 shrink-0 rounded-full" style={{ background: dot }} />
+      <span className="text-[12px] font-bold" style={{ color: text }}>{label}</span>
     </span>
   );
 }
@@ -431,7 +420,7 @@ function UserProfilePopup({
   profile: UserProfile;
   onClose: () => void;
 }) {
-  const { text } = getLevelStyle(profile.level);
+  const { color } = getLevelInfo(profile.level);
   const [following, setFollowing] = useState(false);
   const pct = Math.min(100, Math.round((profile.xp / profile.xpForNext) * 100));
 
@@ -453,14 +442,12 @@ function UserProfilePopup({
 
         {/* ── Avatar + name + follow ── */}
         <div className="mb-3 flex items-center gap-2.5">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[14px] font-bold ${text}`}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[14px] font-bold" style={{ color }}>
             {profile.nickname[0].toUpperCase()}
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <p className="truncate text-[13px] font-bold text-text-primary">{profile.nickname}</p>
-            <p className={`text-[11px] font-semibold ${text}`}>
-              Lv.{profile.level} <span className="font-normal text-text-disabled">{getLevelName(profile.level)}</span>
-            </p>
+            <LevelBadge level={profile.level} />
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); setFollowing(v => !v); }}
@@ -478,7 +465,7 @@ function UserProfilePopup({
         <div className="mb-3">
           <div className="mb-1.5 flex items-center justify-between text-[10px]">
             <span className="text-text-disabled">XP</span>
-            <span className={`num-mono font-semibold ${text}`}>{profile.xp.toLocaleString()} XP</span>
+            <span className="num-mono font-semibold" style={{ color }}>{profile.xp.toLocaleString()} XP</span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
             <div
@@ -550,9 +537,7 @@ function AuthorButton({
       {isAnonymous ? (
         <UserCircle2 size={13} className="text-text-disabled" />
       ) : (
-        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-surface-3 text-[9px] font-bold text-text-secondary">
-          {author[0]}
-        </div>
+        <img src={getLevelInfo(level).badge} alt="" aria-hidden className="h-[18px] w-[18px] shrink-0" />
       )}
       <button
         onClick={(e) => {
@@ -593,10 +578,12 @@ function CommentItem({
 
   return (
     <div className={`flex gap-2.5 ${depth > 0 ? "ml-7 border-l border-border-ghost pl-3" : ""}`}>
-      {/* Avatar */}
-      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[10px] font-bold text-text-secondary">
-        {comment.isAnonymous ? "?" : comment.author[0]}
-      </div>
+      {/* Badge */}
+      {comment.isAnonymous ? (
+        <div className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-surface-3 text-[9px] font-bold text-text-secondary">?</div>
+      ) : (
+        <img src={getLevelInfo(comment.level).badge} alt="" aria-hidden className="mt-0.5 h-[18px] w-[18px] shrink-0" />
+      )}
 
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         {/* Author + time */}
@@ -806,7 +793,7 @@ function PostCard({
       <div className="flex flex-wrap items-center gap-2">
         {post.isBest && (
           <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-[2px] text-[10px] font-bold text-primary">
-            <Gem size={9} /> Best
+            <Flame size={9} /> Best
           </span>
         )}
         {post.isHot && !post.isBest && (
@@ -988,7 +975,7 @@ function WriteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
               onClick={() => setShowCatDrop(v => !v)}
               className="flex w-full items-center justify-between rounded-lg border border-border-subtle bg-surface-2 px-3 py-2.5 text-[13px] font-medium text-text-primary transition-colors hover:bg-surface-3"
             >
-              <span className="flex items-center gap-1.5">{CATEGORY_ICON[category]} {CATEGORY_META[category].label}</span>
+              <span className="flex items-center gap-1.5">{WRITE_CATEGORY_ICON[category]} {CATEGORY_META[category].label}</span>
               <ChevronDown size={14} className={`text-text-tertiary transition-transform ${showCatDrop ? "rotate-180" : ""}`} />
             </button>
             {showCatDrop && (
@@ -1008,7 +995,7 @@ function WriteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        {CATEGORY_ICON[key]} {meta.label}
+                        {WRITE_CATEGORY_ICON[key]} {meta.label}
                       </span>
                       {locked && <span className="text-[10px] text-amber-400/70">Lv.6+</span>}
                     </button>
@@ -1184,60 +1171,55 @@ function WriteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 // ─── Category sidebar ────────────────────────────────────────────────────────
 
+const CATEGORY_SIDEBAR_ITEMS: { key: Category; label: string; icon: React.ReactNode }[] = [
+  { key: "all",     label: "All",                icon: <Hash size={15} /> },
+  { key: "journal", label: "Trading Journal",    icon: <Briefcase size={15} /> },
+  { key: "free",    label: "General Discussion", icon: <Users size={15} /> },
+  { key: "news",    label: "News & Insights",    icon: <Bell size={15} /> },
+];
+
 function CategorySidebar({
   active,
   onChange,
-  counts,
 }: {
   active: Category;
   onChange: (c: Category) => void;
   counts: Record<Category, number>;
 }) {
   return (
-    <aside className="flex w-[200px] shrink-0 flex-col gap-1">
-      <p className="section-label mb-2 px-3">Categories</p>
+    <aside className="flex w-[174px] shrink-0 flex-col">
+      {/* Category section */}
+      <div className="flex flex-col">
+        <p className="px-2 py-2 text-[13px] text-text-disabled">Category</p>
+        {CATEGORY_SIDEBAR_ITEMS.map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => onChange(key)}
+            className={`flex items-center gap-2 rounded-xl px-3 py-[11px] text-[14px] transition-colors ${
+              active === key
+                ? "bg-surface-2 font-bold text-text-primary"
+                : "text-text-disabled hover:text-text-secondary"
+            }`}
+          >
+            <span className={active === key ? "text-text-primary" : "text-text-disabled"}>{icon}</span>
+            <span className="leading-none">{label}</span>
+          </button>
+        ))}
+      </div>
 
-      <button
-        onClick={() => onChange("all")}
-        className={`flex items-center justify-between rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
-          active === "all" ? "bg-surface-2 font-bold text-text-primary" : "text-text-tertiary hover:bg-surface-1 hover:text-text-secondary"
-        }`}
-      >
-        <span className="flex items-center gap-2"><Hash size={14} className="shrink-0" />All</span>
-        <span className="num-mono text-[11px] text-text-disabled">{counts.all}</span>
-      </button>
+      <div className="my-2 h-px bg-white/[0.06]" />
 
-      {(Object.entries(CATEGORY_META) as [Exclude<Category, "all">, typeof CATEGORY_META["journal"]][]).map(([key, meta]) => (
-        <button
-          key={key}
-          onClick={() => onChange(key)}
-          className={`flex items-center justify-between rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
-            active === key ? "bg-surface-2 font-bold text-text-primary" : "text-text-tertiary hover:bg-surface-1 hover:text-text-secondary"
-          }`}
-        >
-          <span className="flex items-center gap-2">
-            <span className="text-text-disabled">{CATEGORY_ICON[key]}</span>
-            <span className="leading-none">{meta.label}</span>
-          </span>
-          <span className="num-mono text-[11px] text-text-disabled">{counts[key]}</span>
-        </button>
-      ))}
-
-      <div className="my-3 divider-ghost" />
-
-      <p className="section-label mb-2 px-3">My Activity</p>
-      {["My Posts", "Saved Posts"].map(label => (
-        <button key={label} className="rounded-lg px-3 py-2 text-left text-[13px] text-text-disabled transition-colors hover:bg-surface-1 hover:text-text-secondary">
-          {label}
-        </button>
-      ))}
-
-      <div className="my-3 divider-ghost" />
-
-      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-text-disabled">
-        <Users size={13} />
-        <span>Online</span>
-        <span className="num-mono ml-auto font-bold text-positive">47</span>
+      {/* My Activity section */}
+      <div className="flex flex-col">
+        <p className="px-2 py-2 text-[13px] text-text-disabled">My Activity</p>
+        {["My Post", "Bookmark"].map(label => (
+          <button
+            key={label}
+            className="rounded-xl px-3 py-[11px] text-left text-[14px] text-text-disabled transition-colors hover:text-text-secondary"
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </aside>
   );
@@ -1246,74 +1228,75 @@ function CategorySidebar({
 // ─── Hot sidebar ──────────────────────────────────────────────────────────────
 
 function HotSidebar({ posts }: { posts: Post[] }) {
-  const hotPosts = posts
+  const popularPosts = posts
     .filter(p => p.isBest || p.isHot)
     .sort((a, b) => b.likes - a.likes)
-    .slice(0, 5);
+    .slice(0, 4);
 
   return (
-    <aside className="w-[240px] shrink-0">
-      <div className="panel">
+    <aside className="flex w-[215px] shrink-0 flex-col gap-2">
 
-        {/* Hot Posts */}
-        <div className="panel-section">
-          <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-disabled">
-            <Flame size={12} className="text-orange-400" /> Hot Posts
-          </h3>
-          <div className="flex flex-col">
-            {hotPosts.map((p, i) => (
-              <div
-                key={p.id}
-                className="group flex cursor-pointer gap-2.5 py-2"
-                style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
-              >
-                <span className={`num-mono mt-0.5 w-4 shrink-0 text-[11px] font-bold ${
-                  i === 0 ? "text-primary" : "text-text-disabled"
-                }`}>
+      {/* Popular Posts — primary border */}
+      <div className="rounded-xl border border-primary bg-surface-2 p-2">
+        <div className="flex items-center gap-2 px-2 py-1">
+          <Flame size={16} className="shrink-0 text-orange-400" />
+          <span className="text-[13px] font-bold text-text-primary">Popular Posts</span>
+        </div>
+        <div className="flex flex-col">
+          {popularPosts.map((p, i) => (
+            <div key={p.id} className="group flex cursor-pointer gap-3 rounded-xl p-2 transition-colors hover:bg-surface-3">
+              <span className={`num-mono mt-0.5 w-3 shrink-0 text-[13px] font-medium ${
+                i < 2 ? "text-primary" : "text-text-disabled"
+              }`}>
+                {i + 1}
+              </span>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <p className="truncate text-[13px] font-bold text-text-secondary transition-colors group-hover:text-text-primary">
+                  {p.title}
+                </p>
+                <div className="flex items-center gap-1 text-[12px] text-text-disabled">
+                  <span>Like</span>
+                  <span className="num-mono">{p.likes}</span>
+                  <span className="mx-1 inline-block h-1 w-1 rounded-full bg-text-disabled/40" />
+                  <span>Comments</span>
+                  <span className="num-mono">{p.comments}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Trending Tickers — default border */}
+      <div className="rounded-xl border border-border-subtle bg-surface-2 p-2">
+        <div className="flex items-center gap-2 px-2 py-1">
+          <TrendingUp size={16} className="shrink-0 text-primary" />
+          <span className="text-[13px] font-bold text-text-primary">Trending Tickers</span>
+        </div>
+        <div className="flex flex-col">
+          {TRENDING_TICKERS.map((t, i) => (
+            <div
+              key={t.symbol}
+              className="flex cursor-pointer items-center justify-between rounded-xl p-2 transition-colors hover:bg-surface-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className={`num-mono w-3 text-[13px] font-medium ${i < 2 ? "text-primary" : "text-text-disabled"}`}>
                   {i + 1}
                 </span>
-                <div className="flex min-w-0 flex-col gap-1">
-                  <p className="line-clamp-2 text-[12px] font-medium leading-snug text-text-secondary transition-colors group-hover:text-text-primary">
-                    {p.title}
-                  </p>
-                  <div className="flex items-center gap-1.5 text-[11px] text-text-disabled">
-                    <ThumbsUp size={10} />
-                    <span className="num-mono">{p.likes}</span>
-                    <span className="text-border-ghost">·</span>
-                    <span>{p.timeAgo}</span>
-                  </div>
-                </div>
+                <span className="text-[13px] font-bold text-text-primary">{t.symbol.replace("$", "")}</span>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Trending Tickers */}
-        <div className="panel-section">
-          <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-disabled">
-            <TrendingUp size={12} className="text-primary" /> Trending
-          </h3>
-          <div className="flex flex-col">
-            {TRENDING_TICKERS.map((t, i) => (
-              <div
-                key={t.symbol}
-                className="flex cursor-pointer items-center justify-between py-1.5 transition-colors hover:opacity-80"
-                style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
-              >
-                <span className="text-[12px] font-bold text-primary">{t.symbol}</span>
-                <div className="flex items-center gap-2">
-                  <span className="num-mono text-[12px] text-text-secondary">${t.price.toLocaleString()}</span>
-                  <span className={`num-mono flex items-center gap-0.5 text-[11px] font-bold ${t.change >= 0 ? "text-positive" : "text-negative"}`}>
-                    {t.change >= 0 ? <ArrowUp size={8} /> : <ArrowDown size={8} />}
-                    {Math.abs(t.change).toFixed(2)}%
-                  </span>
-                </div>
+              <div className="flex flex-col items-end">
+                <span className="num-mono text-[12px] font-bold text-text-primary">${t.price.toLocaleString()}</span>
+                <span className={`num-mono flex items-center gap-0.5 text-[12px] ${t.change >= 0 ? "text-positive" : "text-negative"}`}>
+                  {t.change >= 0 ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
+                  {Math.abs(t.change).toFixed(2)}%
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-
       </div>
+
     </aside>
   );
 }
@@ -1513,28 +1496,57 @@ export default function CommunityPage() {
               </div>
             ) : (
               <>
-                {/* Best posts */}
+                {/* Hall of Fame */}
                 {bestPosts.length > 0 && tab !== "hot" && (
-                  <div className="panel">
-                    <div className="flex items-center gap-2 border-b border-border-ghost px-5 py-3">
-                      <Gem size={12} className="text-primary" />
-                      <span className="section-label text-primary">Best Posts</span>
-                      <span className="text-[10px] text-text-disabled">— 50+ likes</span>
+                  <div className="flex flex-col gap-2.5">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 px-1 py-1">
+                      <Gem size={20} className="shrink-0 text-teal-400" />
+                      <span className="text-[20px] font-bold leading-tight text-text-primary">Hall of Fame</span>
+                      <span className="text-[13px] text-text-disabled">-50+ likes</span>
+                      <button className="ml-auto flex items-center gap-1 text-[12px] font-bold text-text-secondary transition-colors hover:text-text-primary">
+                        More
+                        <ArrowDown size={12} className="-rotate-90" />
+                      </button>
                     </div>
+                    {/* Cards */}
                     {bestPosts.map(p => (
-                      <PostCard key={p.id} post={p} onLike={handleLike} onReport={setReportPostId} />
+                      <div
+                        key={p.id}
+                        className="flex flex-col gap-2 rounded-xl border border-primary/10 px-4 py-3 shadow-[0px_2px_6px_0px_rgba(227,255,138,0.12)]"
+                      >
+                        <CategoryBadge category={p.category as Exclude<Category, "all">} />
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-[14px] font-bold leading-tight text-text-primary">{p.title}</span>
+                          <span className="shrink-0 text-[12px] text-text-disabled">{p.timeAgo}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1 text-[12px] text-text-disabled">
+                            <ThumbsUp size={12} />
+                            {p.likes}
+                          </span>
+                          <span className="flex items-center gap-1 text-[12px] text-text-disabled">
+                            <MessageSquare size={12} />
+                            {p.comments}
+                          </span>
+                        </div>
+                      </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Latest Posts divider */}
+                {bestPosts.length > 0 && tab !== "hot" && regularPosts.length > 0 && (
+                  <div className="flex items-center gap-3 py-1">
+                    <span className="h-px flex-1 bg-border-subtle" />
+                    <span className="shrink-0 text-[13px] font-medium text-text-disabled">Latest Posts</span>
+                    <span className="h-px flex-1 bg-border-subtle" />
                   </div>
                 )}
 
                 {/* Regular / hot list */}
                 {(tab === "hot" ? filtered : regularPosts).length > 0 ? (
-                  <div className="panel">
-                    {bestPosts.length > 0 && tab !== "hot" && (
-                      <div className="flex items-center gap-2 border-b border-border-ghost px-5 py-3">
-                        <span className="section-label">Latest Posts</span>
-                      </div>
-                    )}
+                  <div className="flex flex-col gap-2">
                     {(tab === "hot" ? filtered : regularPosts).map(p => (
                       <PostCard key={p.id} post={p} onLike={handleLike} onReport={setReportPostId} />
                     ))}

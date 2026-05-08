@@ -3,10 +3,10 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 
-// ─── 섹션 ─────────────────────────────────────────────────────────────────────
+// ─── Section ──────────────────────────────────────────────────────────────────
 export type HistorySection = "trade" | "transaction";
 
-// ─── 탭 (각 섹션에 속한 탭) ───────────────────────────────────────────────────
+// ─── Tab (tabs belonging to each section) ────────────────────────────────────
 export type TradeTab = "order" | "trade" | "position";
 export type TransactionTab = "deposit" | "transfer" | "withdraw";
 export type HistoryTab = TradeTab | TransactionTab;
@@ -36,15 +36,15 @@ interface HistoryTabsProps {
 }
 
 /**
- * 2-tier History 내비게이션
+ * 2-tier History navigation
  *
- * Tier 1 — Section 토글: Trade History | Transaction History
- * Tier 2 — Tab strip: 선택된 섹션의 세부 탭
+ * Tier 1 — Section toggle: Trade History | Transaction History
+ * Tier 2 — Tab strip: detail tabs for the selected section
  *
- * 접근성:
- *   - 섹션 토글: role="tablist" / role="tab" / aria-selected
- *   - 탭 스트립: role="tablist" / role="tab" / aria-selected / aria-controls
- *   - 키보드: ← → 화살표 이동 (각 tablist 독립)
+ * Accessibility:
+ *   - Section toggle: role="tablist" / role="tab" / aria-selected
+ *   - Tab strip: role="tablist" / role="tab" / aria-selected / aria-controls
+ *   - Keyboard: ← → arrow navigation (each tablist independent)
  */
 export function HistoryTabs({ section, tab, onSectionChange, onTabChange }: HistoryTabsProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -57,7 +57,7 @@ export function HistoryTabs({ section, tab, onSectionChange, onTabChange }: Hist
     e.preventDefault();
     const next = e.key === "ArrowRight" ? (idx + 1) % SECTIONS.length : (idx - 1 + SECTIONS.length) % SECTIONS.length;
     onSectionChange(SECTIONS[next].id);
-    // 포커스 이동
+    // move focus
     const btns = sectionRef.current?.querySelectorAll<HTMLButtonElement>("[role=tab]");
     btns?.[next]?.focus();
   }
@@ -73,7 +73,7 @@ export function HistoryTabs({ section, tab, onSectionChange, onTabChange }: Hist
 
   return (
     <div className="space-y-0">
-      {/* ── Tier 1: Section 토글 ── */}
+      {/* ── Tier 1: Section toggle ── */}
       <div
         ref={sectionRef}
         role="tablist"
@@ -89,7 +89,7 @@ export function HistoryTabs({ section, tab, onSectionChange, onTabChange }: Hist
             aria-controls={`section-panel-${s.id}`}
             onClick={() => {
               onSectionChange(s.id);
-              // 섹션 변경 시 해당 섹션의 첫 번째 탭으로 초기화
+              // reset to first tab of the selected section
               onTabChange(s.id === "trade" ? "order" : "deposit");
             }}
             onKeyDown={(e) => handleSectionKey(e, idx)}
@@ -108,6 +108,7 @@ export function HistoryTabs({ section, tab, onSectionChange, onTabChange }: Hist
       </div>
 
       {/* ── Tier 2: Tab strip ── */}
+
       <div className="overflow-x-auto border-b border-border-subtle">
         <div
           ref={tabRef}

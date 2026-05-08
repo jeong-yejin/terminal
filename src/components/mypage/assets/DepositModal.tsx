@@ -35,7 +35,7 @@ export function DepositModal({ exchangeId, exchangeName, open, onClose }: Deposi
   const [isFetching, setIsFetching] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // 네트워크가 선택된 asset에 유효한지 확인하고 조정
+  // ensure the selected network is valid for the chosen asset, and adjust if not
   useEffect(() => {
     const available = NETWORKS[asset];
     if (!available.includes(network)) {
@@ -80,16 +80,16 @@ export function DepositModal({ exchangeId, exchangeName, open, onClose }: Deposi
       aria-labelledby="deposit-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-      {/* 백드롭 */}
+      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* 패널 */}
+      {/* Panel */}
       <div className="relative w-full max-w-md rounded-2xl border border-border-subtle bg-surface-2 shadow-2xl">
 
-        {/* 헤더 */}
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-border-subtle px-6 py-4">
           <div>
             <h2 id="deposit-modal-title" className="text-base font-semibold text-text-primary">
@@ -108,7 +108,7 @@ export function DepositModal({ exchangeId, exchangeName, open, onClose }: Deposi
 
         <div className="space-y-5 p-6">
 
-          {/* Asset 선택 */}
+          {/* Asset selection */}
           <div>
             <p className="mb-2 text-xs font-medium text-text-secondary">Coin</p>
             <div className="flex gap-2" role="group" aria-label="Select coin">
@@ -129,7 +129,7 @@ export function DepositModal({ exchangeId, exchangeName, open, onClose }: Deposi
             </div>
           </div>
 
-          {/* Network 선택 */}
+          {/* Network selection */}
           <div>
             <label htmlFor="deposit-network" className="mb-2 block text-xs font-medium text-text-secondary">
               Network
@@ -147,7 +147,7 @@ export function DepositModal({ exchangeId, exchangeName, open, onClose }: Deposi
             </select>
           </div>
 
-          {/* 입금 주소 */}
+          {/* Deposit address */}
           <div>
             <p className="mb-2 text-xs font-medium text-text-secondary">Deposit Address</p>
 
@@ -192,7 +192,7 @@ export function DepositModal({ exchangeId, exchangeName, open, onClose }: Deposi
             )}
           </div>
 
-          {/* 경고 */}
+          {/* Warning */}
           <div className="flex gap-2.5 rounded-xl border border-cautionary/20 bg-cautionary/5 px-4 py-3">
             <AlertTriangle size={14} className="mt-0.5 flex-shrink-0 text-cautionary" aria-hidden />
             <p className="text-xs leading-relaxed text-text-secondary">

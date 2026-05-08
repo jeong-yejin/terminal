@@ -1,8 +1,8 @@
 /**
- * 거래소별 외부 액션 URL
+ * External action URLs by exchange
  *
- * Withdraw는 플랫폼 외부(거래소)에서 처리되므로
- * 각 거래소의 출금 페이지로 직접 링크.
+ * Withdraw is handled outside the platform (on the exchange),
+ * so we link directly to each exchange's withdrawal page.
  */
 
 const WITHDRAW_URLS: Record<string, string> = {
@@ -13,8 +13,8 @@ const WITHDRAW_URLS: Record<string, string> = {
 };
 
 /**
- * 거래소 출금 페이지 URL 반환.
- * 알 수 없는 exchangeId는 `https://{id}.com` 폴백.
+ * Returns the withdrawal page URL for an exchange.
+ * Falls back to `https://{id}.com` for unknown exchangeIds.
  */
 export function getWithdrawUrl(exchangeId: string): string {
   return WITHDRAW_URLS[exchangeId.toLowerCase()] ?? `https://${exchangeId}.com`;

@@ -15,7 +15,7 @@ interface PnlShareModalProps {
 
 /**
  * ROE = realizedPnl / (entryPrice × quantity) × 100
- * 레버리지 정보 없이 명목 가치(notional) 기준으로 근사
+ * approximated based on notional value without leverage information
  */
 function calcRoe(p: PositionHistoryItem): number {
   const notional = p.entryPrice * p.quantity;

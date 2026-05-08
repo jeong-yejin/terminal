@@ -1,4 +1,4 @@
-// Intl.NumberFormat 인스턴스를 모듈 스코프에서 캐시 — 매 호출마다 생성하면 GC 부담
+// Cache Intl.NumberFormat instance at module scope — recreating on every call burdens GC
 const usdFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -6,13 +6,13 @@ const usdFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-/** USD 금액 포맷 (소수점 2자리, 천 단위 콤마) */
+/** Format USD amount (2 decimal places, thousands separator) */
 export function formatUsd(value?: number): string {
   if (value == null) return "—";
   return usdFormatter.format(value);
 }
 
-/** 퍼센트 포맷 (+/- 부호 포함, 소수점 2자리) */
+/** Format percentage (with +/- sign, 2 decimal places) */
 export function formatPct(value?: number): string {
   if (value == null) return "—";
   const sign = value >= 0 ? "+" : "";

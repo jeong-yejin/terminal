@@ -10,12 +10,12 @@ interface AssetTableProps {
 }
 
 /**
- * 거래소별 자산 테이블
+ * Asset table by exchange
  *
- * 섹션:
- *   - Funding Account  — 입출금 대기 잔고
- *   - Spot Account     — 현물 보유 자산
- *   - Futures Account  — 선물 증거금 (Unrealized P&L + Margin Type 컬럼 추가)
+ * Sections:
+ *   - Funding Account  — pending deposit/withdrawal balance
+ *   - Spot Account     — spot holdings
+ *   - Futures Account  — futures margin (with Unrealized P&L + Margin Type columns)
  */
 export function AssetTable({ data, isLoading }: AssetTableProps) {
   if (isLoading) {
@@ -43,7 +43,7 @@ export function AssetTable({ data, isLoading }: AssetTableProps) {
           key={exchange.exchangeId}
           className="overflow-hidden rounded-xl border border-border-subtle bg-surface-1"
         >
-          {/* 거래소 헤더 */}
+          {/* Exchange header */}
           <div className="flex items-center justify-between border-b border-border-subtle bg-surface-2 px-4 py-3">
             <span className="text-sm font-semibold text-text-primary">
               {exchange.exchangeName}

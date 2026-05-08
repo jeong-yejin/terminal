@@ -17,7 +17,7 @@ import {
   fetchWithdrawHistory,
 } from "@/lib/api/history";
 
-// 히스토리는 실시간 불필요 — 포커스 리패치 비활성화, 30s 중복 제거
+// History does not need real-time updates — disable revalidate on focus, 30s dedup
 const HISTORY_SWR_CONFIG = {
   revalidateOnFocus: false,
   dedupingInterval: 30_000,

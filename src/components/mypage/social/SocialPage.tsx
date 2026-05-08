@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Users, UserCheck, UserPlus, Trophy } from "lucide-react";
+import { getLevelInfo } from "@/lib/level";
+import { LevelBadge } from "@/components/LevelBadge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,16 +23,8 @@ interface SocialUser {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getLevelStyle(level: number) {
-  if (level >= 91) return { color: "#fbbf24", label: "Legend" };
-  if (level >= 61) return { color: "#c084fc", label: "Elite" };
-  if (level >= 31) return { color: "#60a5fa", label: "Pro" };
-  if (level >= 11) return { color: "#CAFF5D", label: "Expert" };
-  return { color: "#737373", label: "Trader" };
-}
-
 function Avatar({ nickname, level, size = 40 }: { nickname: string; level: number; size?: number }) {
-  const { color } = getLevelStyle(level);
+  const { color } = getLevelInfo(level);
   return (
     <div
       className="flex-shrink-0 flex items-center justify-center rounded-full font-bold text-sm"
@@ -66,7 +60,6 @@ const MOCK_FOLLOWING: SocialUser[] = [
 
 function UserCard({ user, showUnfollow }: { user: SocialUser; showUnfollow: boolean }) {
   const [following, setFollowing] = useState(user.isFollowing);
-  const { color, label } = getLevelStyle(user.level);
 
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border-subtle bg-surface-1 p-4 transition-colors hover:bg-surface-2/30">
@@ -74,6 +67,7 @@ function UserCard({ user, showUnfollow }: { user: SocialUser; showUnfollow: bool
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
+          <img src={getLevelInfo(user.level).badge} alt="" aria-hidden className="h-[18px] w-[18px] shrink-0" />
           <span className="text-[14px] font-semibold text-text-primary truncate">{user.nickname}</span>
           {user.isReferral && (
             <span className="inline-flex items-center rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary">
@@ -82,12 +76,7 @@ function UserCard({ user, showUnfollow }: { user: SocialUser; showUnfollow: bool
           )}
         </div>
         <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-          <span
-            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
-            style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}
-          >
-            Lv.{user.level} {label}
-          </span>
+          <LevelBadge level={user.level} />
           <span className="text-[11px] text-text-disabled">{user.volumeRange}</span>
         </div>
         <div className="mt-1.5 flex items-center gap-3">
@@ -132,12 +121,12 @@ function EmptyState({ tab }: { tab: SocialTab }) {
         <Users size={20} className="text-text-disabled" />
       </div>
       <p className="text-[13px] text-text-secondary">
-        {tab === "followers" ? "아직 팔로워가 없습니다." : "팔로잉하는 트레이더가 없습니다."}
+        {tab === "followers" ? "No followers yet." : "No traders followed yet."}
       </p>
       <p className="text-[12px] text-text-disabled">
         {tab === "followers"
-          ? "커뮤니티에 글을 작성해보세요."
-          : "우수한 트레이더를 팔로우하고 인사이트를 얻으세요."}
+          ? "Try posting in the community."
+          : "Follow top traders to gain insights."}
       </p>
     </div>
   );
@@ -155,7 +144,7 @@ export function SocialPage() {
       {/* Header */}
       <div>
         <h1 className="text-[22px] font-bold text-text-primary tracking-tight">Social</h1>
-        <p className="mt-1 text-[13px] text-text-secondary">팔로워 및 팔로잉 트레이더 관리</p>
+        <p className="mt-1 text-[13px] text-text-secondary">Manage your followers and following traders</p>
       </div>
 
       {/* Stats bar */}

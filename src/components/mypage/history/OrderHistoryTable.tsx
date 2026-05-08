@@ -37,7 +37,7 @@ export function OrderHistoryTable({ filters }: OrderHistoryTableProps) {
     );
   }
 
-  // marketType 필터 적용 (클라이언트 사이드 — API가 지원하면 서버로 이동)
+  // apply marketType filter client-side — move to server once API supports it
   const filtered = data?.filter((row) =>
     !filters.marketType || filters.marketType === "all"
       ? true

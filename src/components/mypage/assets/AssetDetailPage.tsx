@@ -128,7 +128,7 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
             Trade
           </Link>
 
-          {/* Transfer — 서비스 내부 (계좌 간 이체) */}
+          {/* Transfer — in-service (between accounts) */}
           <Link
             href={`/mypage/history?section=transaction&tab=transfer&exchange=${exchangeId}`}
             className="flex items-center gap-1.5 rounded-md min-h-[44px] px-3 py-2.5
@@ -141,7 +141,7 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
             Transfer
           </Link>
 
-          {/* Withdraw — 거래소 외부 처리 (external link) */}
+          {/* Withdraw — handled externally on the exchange (external link) */}
           <a
             href={getWithdrawUrl(exchangeId)}
             target="_blank"
@@ -157,7 +157,7 @@ export function AssetDetailPage({ exchangeId }: AssetDetailPageProps) {
             <ExternalLink size={11} className="text-text-tertiary" aria-hidden />
           </a>
 
-          {/* Deposit — 서비스 내부 (primary CTA) */}
+          {/* Deposit — in-service (primary CTA) */}
           <button
             onClick={() => setDepositOpen(true)}
             className="flex items-center gap-1.5 rounded-md bg-primary min-h-[44px] px-3 py-2.5

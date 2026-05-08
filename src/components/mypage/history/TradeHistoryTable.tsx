@@ -37,7 +37,7 @@ export function TradeHistoryTable({ filters }: TradeHistoryTableProps) {
     );
   }
 
-  // marketType 필터 적용
+  // apply marketType filter
   const filtered = data?.filter((row) =>
     !filters.marketType || filters.marketType === "all"
       ? true
