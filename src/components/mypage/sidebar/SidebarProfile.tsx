@@ -12,7 +12,7 @@ export function SidebarProfile({ name, email, avatarUrl, level = 1, xp = 0, xpFo
   const [imgError, setImgError] = useState(false);
   const showInitials = !avatarUrl || imgError;
   const initial = name?.trim().charAt(0).toUpperCase() ?? "";
-  const { color } = getLevelInfo(level);
+  const { color, badge } = getLevelInfo(level);
   const xpPct = Math.min(100, Math.round((xp / xpForNext) * 100));
 
   return (
@@ -53,6 +53,7 @@ export function SidebarProfile({ name, email, avatarUrl, level = 1, xp = 0, xpFo
 
         {/* Level badge */}
         <div className="mt-1 flex items-center justify-center gap-1.5">
+          <img src={badge} alt="" aria-hidden className="h-[18px] w-[18px] shrink-0" />
           <LevelBadge level={level} />
           {email && <span className="hidden" />}
         </div>

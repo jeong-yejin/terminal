@@ -6,7 +6,7 @@ export async function GET() {
     {
       id: "binance",
       name: "Binance",
-      logoUrl: "https://cryptologos.cc/logos/binance-coin-bnb-logo.png",
+      logoUrl: "/logos/binance.svg",
       status: "connected",
       connectedAt: "2024-11-10T08:30:00Z",
       apiKeyMasked: "****xK9m",
@@ -15,7 +15,7 @@ export async function GET() {
     {
       id: "bybit",
       name: "Bybit",
-      logoUrl: "https://cryptologos.cc/logos/bybit-logo.png",
+      logoUrl: "/logos/bybit.svg",
       status: "connected",
       connectedAt: "2025-01-05T14:15:00Z",
       apiKeyMasked: "****rT2p",
@@ -24,7 +24,7 @@ export async function GET() {
     {
       id: "okx",
       name: "OKX",
-      logoUrl: "https://cryptologos.cc/logos/okb-okb-logo.png",
+      logoUrl: "/logos/okx.svg",
       status: "error",
       connectedAt: "2025-02-18T09:00:00Z",
       apiKeyMasked: "****vB7n",
@@ -35,9 +35,9 @@ export async function GET() {
 }
 
 const EXCHANGE_META: Record<string, { name: string; logoUrl: string }> = {
-  binance: { name: "Binance", logoUrl: "https://cryptologos.cc/logos/binance-coin-bnb-logo.png" },
-  bybit:   { name: "Bybit",   logoUrl: "https://cryptologos.cc/logos/bybit-logo.png" },
-  okx:     { name: "OKX",     logoUrl: "https://cryptologos.cc/logos/okb-okb-logo.png" },
+  binance: { name: "Binance", logoUrl: "/logos/binance.svg" },
+  bybit:   { name: "Bybit",   logoUrl: "/logos/bybit.svg" },
+  okx:     { name: "OKX",     logoUrl: "/logos/okx.svg" },
   bitget:  { name: "Bitget",  logoUrl: "https://cryptologos.cc/logos/bitget-token-bgb-logo.png" },
 };
 

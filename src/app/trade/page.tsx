@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { MessageSquare, X, Trophy } from "lucide-react";
 import { SymbolBar } from "@/components/trade/SymbolBar";
 import { ChartArea } from "@/components/trade/ChartArea";
@@ -98,6 +98,49 @@ export default function TradePage() {
 
   const isPanelOpen = rightPanel !== null;
 
+  // ── Orderbook horizontal resize ──────────────────────────────────────────────
+  const [orderbookWidth, setOrderbookWidth] = useState(192);
+
+  const handleOrderbookResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = orderbookWidth;
+
+    const onMove = (ev: MouseEvent) => {
+      const delta = ev.clientX - startX;
+      setOrderbookWidth(Math.max(120, Math.min(startW - delta, 360)));
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [orderbookWidth]);
+
+  // ── Chart vertical resize ────────────────────────────────────────────────────
+  const [chartHeight, setChartHeight] = useState<number | null>(null);
+  const chartWrapperRef = useRef<HTMLDivElement>(null);
+  const columnRef       = useRef<HTMLDivElement>(null);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startY      = e.clientY;
+    const startH      = chartWrapperRef.current?.getBoundingClientRect().height ?? 400;
+    const containerH  = columnRef.current?.getBoundingClientRect().height ?? 800;
+
+    const onMove = (ev: MouseEvent) => {
+      const delta = ev.clientY - startY;
+      setChartHeight(Math.max(120, Math.min(startH + delta, containerH - 80)));
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, []);
+
   return (
     <div className="flex h-[calc(100vh-56px)] flex-col overflow-hidden bg-background">
 
@@ -118,13 +161,46 @@ export default function TradePage() {
       <div className="flex min-h-0 flex-1 overflow-hidden">
 
         {/* Chart + bottom panel */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <ChartArea symbol={symbol} primaryExchange={exchange} />
-          <TradeBottomPanel onSharePosition={handleSharePosition} />
+        <div ref={columnRef} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+
+          {/* Chart — resizable */}
+          <div
+            ref={chartWrapperRef}
+            className={chartHeight === null ? "flex min-h-0 flex-1 flex-col" : "flex flex-shrink-0 flex-col overflow-hidden"}
+            style={chartHeight !== null ? { height: chartHeight } : undefined}
+          >
+            <ChartArea symbol={symbol} primaryExchange={exchange} />
+          </div>
+
+          {/* Drag handle */}
+          <div
+            onMouseDown={handleResizeStart}
+            className="group relative flex h-[5px] flex-shrink-0 cursor-row-resize items-center justify-center select-none"
+          >
+            <div className="absolute inset-0 bg-border-subtle transition-colors group-hover:bg-primary/30 group-active:bg-primary/40" />
+            <div className="relative h-0.5 w-8 rounded-full bg-transparent transition-colors group-hover:bg-primary/50" />
+          </div>
+
+          {/* Bottom panel — fills remaining */}
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <TradeBottomPanel onSharePosition={handleSharePosition} />
+          </div>
+        </div>
+
+        {/* Orderbook resize handle */}
+        <div
+          onMouseDown={handleOrderbookResizeStart}
+          className="group relative flex w-[5px] flex-shrink-0 cursor-col-resize items-center justify-center select-none"
+        >
+          <div className="absolute inset-0 bg-border-subtle transition-colors group-hover:bg-primary/30 group-active:bg-primary/40" />
+          <div className="relative h-8 w-0.5 rounded-full bg-transparent transition-colors group-hover:bg-primary/50" />
         </div>
 
         {/* Orderbook */}
-        <aside className="flex w-48 shrink-0 flex-col overflow-hidden border-l border-border-subtle bg-surface-1">
+        <aside
+          className="flex flex-shrink-0 flex-col overflow-hidden bg-surface-1"
+          style={{ width: orderbookWidth }}
+        >
           <Orderbook symbol={symbol} />
         </aside>
 

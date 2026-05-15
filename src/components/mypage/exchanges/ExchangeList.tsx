@@ -1,9 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
+import { ArrowRight, Unlink } from "lucide-react";
 import type { ExchangeConnection } from "@/types/mypage";
 import { cn } from "@/lib/utils";
 import { disconnectExchange } from "@/lib/api/exchanges";
+import { ConnectExchangeModal } from "./ConnectExchangeModal";
+
+const EXCHANGE_BRAND_BG: Record<string, string> = {
+  bybit:   "#15192a",
+  binance: "#f0b90b",
+};
+
+const SYMBOL_LOGO: Record<string, string> = {
+  binance: "/logos/symbol/icon=binance.svg",
+  bybit:   "/logos/symbol/icon=bybit.svg",
+  okx:     "/logos/symbol/icon=okx.svg",
+};
+
+const STATUS_META: Record<
+  ExchangeConnection["status"],
+  { label: string; badge: string }
+> = {
+  connected:    { label: "Connected",     badge: "bg-primary/10 text-[#b3e84e]" },
+  disconnected: { label: "Not Connected", badge: "bg-cautionary/10 text-cautionary" },
+  error:        { label: "Error",         badge: "bg-negative/10 text-negative" },
+};
 
 interface ExchangeListProps {
   exchanges?: ExchangeConnection[];
@@ -12,38 +35,22 @@ interface ExchangeListProps {
   onReconnect?: () => void;
 }
 
-const STATUS_META: Record<
-  ExchangeConnection["status"],
-  { label: string; badge: string }
-> = {
-  connected:    { label: "Connected",    badge: "bg-positive/10 text-positive" },
-  disconnected: { label: "Disconnected", badge: "bg-surface-3 text-text-tertiary" },
-  error:        { label: "Error",        badge: "bg-negative/10 text-negative" },
-};
-
-/**
- * My Exchanges — connected exchange list
- *
- * Each item: logo · name · UID · status badge · connect / reconnect / disconnect CTA
- *
- * Accessibility:
- *   - role="list" / role="listitem"
- *   - aria-label on buttons (includes exchange name)
- *   - confirm dialog before disconnect
- */
 export function ExchangeList({
   exchanges,
   isLoading,
   onDisconnect,
   onReconnect,
 }: ExchangeListProps) {
+  const [connectingExchange, setConnectingExchange] =
+    useState<ExchangeConnection | null>(null);
+
   if (isLoading) {
     return (
-      <div className="space-y-3" aria-busy="true" aria-label="Loading exchanges">
-        {Array.from({ length: 2 }).map((_, i) => (
+      <div className="flex gap-3" aria-busy="true" aria-label="Loading exchanges">
+        {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="h-24 animate-pulse rounded-xl border border-border-subtle bg-surface-1"
+            className="h-[104px] flex-1 animate-pulse rounded-xl border border-border-subtle bg-surface-1"
           />
         ))}
       </div>
@@ -55,93 +62,69 @@ export function ExchangeList({
       <div className="rounded-xl border border-border-subtle bg-surface-1 p-10 text-center">
         <p className="text-sm text-text-secondary">No exchanges connected.</p>
         <p className="mt-1 text-xs text-text-tertiary">
-          Click "Add Exchange" above to connect via API key.
+          Go to Settings to connect via API key.
         </p>
       </div>
     );
   }
 
   return (
-    <ul role="list" className="space-y-3">
-      {exchanges.map((exchange) => {
-        const meta = STATUS_META[exchange.status];
-        const isConnected = exchange.status === "connected";
-        const needsConnect = exchange.status === "disconnected" || exchange.status === "error";
+    <>
+      <div role="list" className="flex gap-3 w-full">
+        {exchanges.map((exchange) => {
+          const meta = STATUS_META[exchange.status];
+          const isConnected = exchange.status === "connected";
+          const brandBg = EXCHANGE_BRAND_BG[exchange.id] ?? "transparent";
 
-        return (
-          <li
-            key={exchange.id}
-            role="listitem"
-            className="rounded-xl border border-border-subtle bg-surface-1 px-5 py-4"
-          >
-            <div className="flex flex-wrap items-center gap-4">
-
-              {/* ── Logo ── */}
-              <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-surface-2">
-                <Image
-                  src={exchange.logoUrl}
-                  alt={`${exchange.name} logo`}
-                  fill
-                  sizes="40px"
-                  className="object-contain p-1"
-                />
-              </div>
-
-              {/* ── Info ── */}
-              <div className="flex-1 min-w-0 space-y-0.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-semibold text-text-primary">
+          return (
+            <div
+              key={exchange.id}
+              role="listitem"
+              className="flex flex-1 flex-col gap-6 rounded-xl border border-border-subtle bg-surface-1 px-4 py-4 drop-shadow-[0px_1px_2px_rgba(255,255,255,0.08)] min-w-0"
+            >
+              {/* Exchange name + status badge */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-border-ghost"
+                    style={{ backgroundColor: brandBg }}
+                  >
+                    <Image
+                      src={SYMBOL_LOGO[exchange.id] ?? exchange.logoUrl}
+                      alt={`${exchange.name} logo`}
+                      width={14}
+                      height={14}
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="text-body-3 font-bold text-text-primary whitespace-nowrap">
                     {exchange.name}
                   </span>
-                  <span
-                    className={cn(
-                      "rounded-full px-2.5 py-0.5 text-xs font-medium",
-                      meta.badge
-                    )}
-                    aria-label={`Status: ${meta.label}`}
-                  >
-                    {meta.label}
-                  </span>
                 </div>
-
-                <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-text-tertiary">
-                  {exchange.uid && (
-                    <span>
-                      UID: <span className="font-mono text-text-secondary">{exchange.uid}</span>
-                    </span>
+                <span
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-md px-1",
+                    "text-[12px] leading-[18px] font-bold tracking-[0.18px] whitespace-nowrap",
+                    meta.badge
                   )}
-                  <span>
-                    API Key:{" "}
-                    <span className="font-mono text-text-secondary">
-                      {exchange.apiKeyMasked}
-                    </span>
-                  </span>
-                  <span>
-                    Connected on{" "}
-                    {new Date(exchange.connectedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
+                  aria-label={`Status: ${meta.label}`}
+                >
+                  {meta.label}
+                </span>
               </div>
 
-              {/* ── Actions ── */}
-              <div className="flex items-center gap-2">
-                {needsConnect && (
-                  <button
-                    onClick={() => onReconnect?.()}
-                    aria-label={`${exchange.status === "error" ? "Reconnect" : "Connect"} ${exchange.name}`}
-                    className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-text-inverse
-                      hover:bg-primary-strong focus-ring
-                      disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {exchange.status === "error" ? "Reconnect" : "Connect"}
-                  </button>
-                )}
+              {/* UID + action button */}
+              <div className="flex items-center justify-between">
+                <div>
+                  {isConnected && exchange.uid && (
+                    <div className="flex items-center gap-2 text-label-1 tracking-[0.14px]">
+                      <span className="text-text-tertiary">UID</span>
+                      <span className="font-bold text-text-primary">{exchange.uid}</span>
+                    </div>
+                  )}
+                </div>
 
-                {isConnected && (
+                {isConnected ? (
                   <button
                     onClick={async () => {
                       if (
@@ -158,18 +141,37 @@ export function ExchangeList({
                       }
                     }}
                     aria-label={`Disconnect ${exchange.name}`}
-                    className="rounded-md border border-negative/40 px-3 py-1.5 text-xs font-medium text-negative
-                      hover:bg-negative/10 focus-ring transition-colors"
+                    className="flex items-center gap-1 text-caption font-bold text-text-disabled tracking-[0.18px] hover:text-text-secondary transition-colors"
                   >
+                    <Unlink size={12} aria-hidden="true" />
                     Disconnect
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setConnectingExchange(exchange)}
+                    aria-label={`Connect ${exchange.name} to trade`}
+                    className="flex items-center gap-1 text-caption font-bold text-primary tracking-[0.18px] hover:text-primary/80 transition-colors"
+                  >
+                    Connect to Trade
+                    <ArrowRight size={12} aria-hidden="true" />
                   </button>
                 )}
               </div>
-
             </div>
-          </li>
-        );
-      })}
-    </ul>
+          );
+        })}
+      </div>
+
+      {connectingExchange && (
+        <ConnectExchangeModal
+          exchange={connectingExchange}
+          onClose={() => setConnectingExchange(null)}
+          onSuccess={() => {
+            setConnectingExchange(null);
+            onReconnect?.();
+          }}
+        />
+      )}
+    </>
   );
 }
